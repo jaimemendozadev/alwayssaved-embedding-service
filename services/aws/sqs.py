@@ -18,13 +18,44 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
 
+def get_message_from_extractor_service(max_messages=10, wait_time=120):
+    embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
+
+    if not embedding_push_queue_url:
+        print("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
+        return
+
+    try:
+        response = sqs_client.receive_message(
+            QueueUrl=embedding_push_queue_url,
+            MaxNumberOfMessages=max_messages,  # You can adjust this to batch process more users
+            WaitTimeSeconds=wait_time,  # Long polling to reduce API calls
+        )
+
+        print(f"response from EMBEDDING_PUSH_QUEUE {response}")
+        print("\n")
+
+        return response.get("messages", [])
+
+    except ClientError as e:
+        print(
+            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']}"
+        )
+
+    except BotoCoreError as e:
+        print(f"❌ Boto3 Internal Error: {str(e)}")
+
+    except Exception as e:
+        print(f"❌ Unexpected Error: {str(e)}")
+
+
 def send_embedding_sqs_message(sqs_payload):
     """Sends a message to the SQS embedding_push_queue indicating the transcript is ready for embedding process."""
 
     embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
 
     if not embedding_push_queue_url:
-        print("⚠️ ERROR: SQS Queue URL not set!")
+        print("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
         return
 
     try:
