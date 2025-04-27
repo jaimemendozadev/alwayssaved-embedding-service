@@ -8,6 +8,7 @@ qdrant-client = "*"
 dotenv = "*"
 boto3 = "*"
 pymongo = "*"
+sentence-transformers = "*"
 
 [dev-packages]
 pre-commit = "*"
