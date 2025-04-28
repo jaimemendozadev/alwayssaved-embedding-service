@@ -10,6 +10,8 @@ boto3 = "*"
 pymongo = "*"
 sentence-transformers = "*"
 uuid = "*"
+pdfplumber = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 pre-commit = "*"
