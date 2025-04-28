@@ -3,6 +3,8 @@ import os
 import boto3
 from dotenv import load_dotenv
 
+from services.embedding.main import get_embedd_model
+from services.qdrant.main import create_qdrant_collection, get_qdrant_client
 from services.utils.main import _generate_fake_sqs_msg
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -14,7 +16,13 @@ load_dotenv()
 PYTHON_MODE = os.getenv("PYTHON_MODE", "production")
 
 
+qdrant_client = get_qdrant_client()
+embedding_model = get_embedd_model()
+
+
 def run_service():
+
+    create_qdrant_collection(qdrant_client)
 
     while True:
         try:
