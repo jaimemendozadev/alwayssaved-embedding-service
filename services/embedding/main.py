@@ -1,8 +1,11 @@
 import os
 import uuid
 
+import boto3
 from qdrant_client import QdrantClient, models
 from sentence_transformers import SentenceTransformer
+
+from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
 
 
 def get_embedd_model() -> SentenceTransformer:
@@ -29,10 +32,16 @@ def chunk_text(text, chunk_size=1000, overlap=100):
 def embed_and_upload(
     embedding_model: SentenceTransformer,
     qdrant_client: QdrantClient,
+    s3_client: boto3.client,
     s3_transcript_url: str,
 ):
+    file_bytes = download_file_from_s3(s3_client, s3_transcript_url)
 
-    full_text = f.read()
+    _, file_extension = os.path.splitext(s3_transcript_url)
+
+    file_extension = file_extension.lower()
+
+    full_text = extract_text_from_s3_bytes(file_bytes, file_extension)
 
     chunks = chunk_text(full_text)
 
