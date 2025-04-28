@@ -7,11 +7,11 @@ name = "pypi"
 qdrant-client = "*"
 dotenv = "*"
 boto3 = "*"
-pymongo = "*"
 sentence-transformers = "*"
 uuid = "*"
 pdfplumber = "*"
 beautifulsoup4 = "*"
+pymongo = "*"
 
 [dev-packages]
 pre-commit = "*"

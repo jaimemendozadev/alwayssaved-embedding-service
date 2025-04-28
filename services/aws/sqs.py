@@ -18,7 +18,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
 
-def get_message_from_extractor_service(max_messages=10, wait_time=120):
+def get_messages_from_extractor_service(max_messages=10, wait_time=120):
     embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
 
     if not embedding_push_queue_url:
