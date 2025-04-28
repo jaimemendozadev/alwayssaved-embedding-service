@@ -1,21 +1,11 @@
-import os
 
 from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
 
 from services.aws.ssm import get_secret
 
 
 def get_collection(Q_Client: QdrantClient):
     pass
-
-
-def get_embedd_model() -> SentenceTransformer:
-    embedd_model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
-
-    embedding_model = SentenceTransformer(embedd_model_name)
-
-    return embedding_model
 
 
 def get_qdrant_client() -> QdrantClient | None:

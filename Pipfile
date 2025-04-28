@@ -9,6 +9,7 @@ dotenv = "*"
 boto3 = "*"
 pymongo = "*"
 sentence-transformers = "*"
+uuid = "*"
 
 [dev-packages]
 pre-commit = "*"

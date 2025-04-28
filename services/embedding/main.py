@@ -1,0 +1,59 @@
+import os
+import uuid
+
+from qdrant_client import QdrantClient, models
+from sentence_transformers import SentenceTransformer
+
+
+def get_embedd_model() -> SentenceTransformer:
+    embedd_model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
+
+    embedding_model = SentenceTransformer(embedd_model_name)
+
+    return embedding_model
+
+
+def chunk_text(text, chunk_size=1000, overlap=100):
+    chunks = []
+    start = 0
+
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += chunk_size - overlap
+
+    return chunks
+
+
+def embed_and_upload(
+    embedding_model: SentenceTransformer,
+    qdrant_client: QdrantClient,
+    s3_transcript_url: str,
+):
+
+    full_text = f.read()
+
+    chunks = chunk_text(full_text)
+
+    vectors = embedding_model.encode(chunks, normalize_embeddings=True)
+
+    points = []
+
+    for idx, (chunked_text, vector) in enumerate(zip(chunks, vectors)):
+        points.append(
+            models.PointStruct(
+                id=str(uuid.uuid4()),  # unique ID per chunk
+                vector=vector.tolist(),
+                payload={
+                    "_id": str(transcript_id),
+                    "user_id": user_id,
+                    "source_transcript_url": s3_transcript_url,
+                    "original_chunk_text": chunked_text,
+                },
+            )
+        )
+
+    qdrant_client.upsert(collection_name="notecasts-transcripts", points=points)
+
+    print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
