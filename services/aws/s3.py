@@ -2,6 +2,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import boto3
+import botocore
 import pdfplumber
 from bs4 import BeautifulSoup
 
@@ -22,11 +23,21 @@ def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str:
         raise ValueError(f"Unsupported file extension: {file_extension}")
 
 
-def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes:
-    parsed_url = urlparse(s3_url)
-    bucket = parsed_url.netloc.split(".")[
-        0
-    ]  # Gets 'my-bucket' from 'my-bucket.s3.us-west-2.amazonaws.com'
-    key = parsed_url.path.lstrip("/")  # Remove leading slash
-    response = s3_client.get_object(Bucket=bucket, Key=key)
-    return response["Body"].read()
+def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
+    try:
+        parsed_url = urlparse(s3_url)
+        bucket = parsed_url.netloc.split(".")[
+            0
+        ]  # Gets 'my-bucket' from 'my-bucket.s3.us-west-2.amazonaws.com'
+        key = parsed_url.path.lstrip("/")  # Remove leading slash
+        response = s3_client.get_object(Bucket=bucket, Key=key)
+        return response["Body"].read()
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            print("Object does not exist!")
+        elif e.response["Error"]["Code"] == "404":
+            print("Object does not exist!")
+        else:
+            print("An error occurred: ", e)
+
+        return None
