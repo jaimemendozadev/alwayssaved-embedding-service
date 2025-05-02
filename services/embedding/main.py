@@ -59,6 +59,11 @@ def embed_and_upload(
 
         full_text = extract_text_from_s3_bytes(file_bytes, file_extension)
 
+        if full_text is None:
+            raise ValueError(
+                f"Could not extract text from downloaded s3 file: {transcript_url} \n"
+            )
+
         chunks = chunk_text(full_text)
 
         # NOTE: Do we need to add error handling for encoding chunks or upserting? 🤔

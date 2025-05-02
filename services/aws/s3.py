@@ -7,7 +7,7 @@ import pdfplumber
 from bs4 import BeautifulSoup
 
 
-def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str:
+def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str | None:
     try:
         if file_extension == ".txt":
             return file_bytes.decode("utf-8")  # Simple text
@@ -25,6 +25,8 @@ def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str:
 
     except ValueError as e:
         print(f"❌ Value Error: {e}")
+
+    return None
 
 
 def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
