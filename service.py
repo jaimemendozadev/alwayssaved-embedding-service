@@ -1,10 +1,13 @@
+import json
 import os
 
 import boto3
 from dotenv import load_dotenv
 
 from dev_utils.main import _generate_fake_sqs_msg
-from services.embedding.main import get_embedd_model
+from services.embedding.main import embed_and_upload, get_embedd_model
+
+# from services.aws.sqs import get_messages_from_extractor_service
 from services.qdrant.main import create_qdrant_collection, get_qdrant_client
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -31,10 +34,25 @@ def run_service():
             print(f"fake_sqs_payload: {fake_sqs_payload}")
             print("\n")
 
-            if PYTHON_MODE == "development":
-                break
+            sqs_msg_list = fake_sqs_payload.get("Messages", [])
+
+            if len(sqs_msg_list) == 0:
+                continue
+
+            for msg in sqs_msg_list:
+
+                body = json.loads(msg.get("Body", {}))
+                transcript_url = body.get("transcript_url", "")
+
+                embed_and_upload(
+                    embedding_model=embedding_model,
+                    qdrant_client=qdrant_client,
+                    s3_client=s3_client,
+                    s3_transcript_url=transcript_url,
+                )
 
             # get_messages_from_extractor_service()
+
         except ValueError as e:
             print(f"ValueError: {e}")
 

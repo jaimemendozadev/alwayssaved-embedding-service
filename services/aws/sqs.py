@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any, Dict
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -18,12 +19,14 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
 
-def get_messages_from_extractor_service(max_messages=10, wait_time=120):
+def get_messages_from_extractor_service(
+    max_messages=10, wait_time=120
+) -> Dict[str, Any]:
     embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
 
     if not embedding_push_queue_url:
         print("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
-        return
+        return {}
 
     try:
         response = sqs_client.receive_message(
@@ -35,7 +38,7 @@ def get_messages_from_extractor_service(max_messages=10, wait_time=120):
         print(f"response from EMBEDDING_PUSH_QUEUE {response}")
         print("\n")
 
-        return response.get("messages", [])
+        return response
 
     except ClientError as e:
         print(
@@ -47,6 +50,8 @@ def get_messages_from_extractor_service(max_messages=10, wait_time=120):
 
     except Exception as e:
         print(f"❌ Unexpected Error: {str(e)}")
+
+    return {}
 
 
 def send_embedding_sqs_message(sqs_payload):

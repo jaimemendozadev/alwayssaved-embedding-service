@@ -1,14 +1,15 @@
 import json
 import uuid
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from bson.objectid import ObjectId
 
-dummy_s3_urls = []
+dummy_s3_urls: List[str] = []
+
 
 def _generate_fake_sqs_msg() -> Dict[str, Any]:
 
-    fake_payload = {"Messages": []}
+    fake_payload: Dict[str, Any] = {"Messages": []}
 
     for url in dummy_s3_urls:
         fake_payload["Messages"].append(
