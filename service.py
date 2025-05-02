@@ -3,9 +3,9 @@ import os
 import boto3
 from dotenv import load_dotenv
 
+from dev_utils.main import _generate_fake_sqs_msg
 from services.embedding.main import get_embedd_model
 from services.qdrant.main import create_qdrant_collection, get_qdrant_client
-from services.utils.main import _generate_fake_sqs_msg
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 s3_client = boto3.client("s3", region_name=AWS_REGION)
@@ -40,3 +40,23 @@ def run_service():
 
 
 run_service()
+
+# pylint: disable=W0105
+"""
+Dev Notes 5/2/25:
+
+- Decided to organize media uploads and call each upload a "Note".
+- If the Note is an .mp3 or .mp4, a Note is created for that file and it'll get uploaded on the Frontend to s3 at /{userID}/{noteID}/{fileName}.{fileExtension}
+- When SQS messages arrives in Extractor service, will transcribe and upload the transcript to s3 at /{userID}/{noteID}/{fileName}.txt
+- Incoming SQS Message has the following shape:
+  {
+    note_id: string;
+    transcript_url: string;
+  }
+
+
+- Outgoing SQS Message has the following shape (may get redone):
+{
+
+}
+"""
