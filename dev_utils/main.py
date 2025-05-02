@@ -15,7 +15,13 @@ def _generate_fake_sqs_msg() -> Dict[str, Any]:
         fake_payload["Messages"].append(
             {
                 "MessageId": str(uuid.uuid4()),
-                "Body": json.dumps({"note_id": str(ObjectId()), "transcript_url": url}),
+                "Body": json.dumps(
+                    {
+                        "note_id": str(ObjectId()),
+                        "user_id": str(ObjectId()),
+                        "transcript_url": url,
+                    }
+                ),
             }
         )
 

@@ -8,19 +8,23 @@ from bs4 import BeautifulSoup
 
 
 def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str:
-    if file_extension == ".txt":
-        return file_bytes.decode("utf-8")  # Simple text
-    elif file_extension == ".pdf":
-        text = ""
-        with pdfplumber.open(BytesIO(file_bytes)) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text() or ""
-        return text
-    elif file_extension == ".html":
-        soup = BeautifulSoup(file_bytes, "html.parser")
-        return soup.get_text()
-    else:
-        raise ValueError(f"Unsupported file extension: {file_extension}")
+    try:
+        if file_extension == ".txt":
+            return file_bytes.decode("utf-8")  # Simple text
+        elif file_extension == ".pdf":
+            text = ""
+            with pdfplumber.open(BytesIO(file_bytes)) as pdf:
+                for page in pdf.pages:
+                    text += page.extract_text() or ""
+            return text
+        elif file_extension == ".html":
+            soup = BeautifulSoup(file_bytes, "html.parser")
+            return soup.get_text()
+        else:
+            raise ValueError(f"Unsupported file extension: {file_extension}")
+
+    except ValueError as e:
+        print(f"❌ Value Error: {e}")
 
 
 def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
@@ -34,10 +38,9 @@ def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
         return response["Body"].read()
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
-            print("Object does not exist!")
+            print(f"s3_url {s3_url} does not exist! \n")
         elif e.response["Error"]["Code"] == "404":
-            print("Object does not exist!")
+            print(f"s3_url {s3_url} does not exist! \n")
         else:
             print("An error occurred: ", e)
-
-        return None
+    return None

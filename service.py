@@ -9,6 +9,7 @@ from services.embedding.main import embed_and_upload, get_embedd_model
 
 # from services.aws.sqs import get_messages_from_extractor_service
 from services.qdrant.main import create_qdrant_collection, get_qdrant_client
+from services.utils.types.main import SQSPayload
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 s3_client = boto3.client("s3", region_name=AWS_REGION)
@@ -29,6 +30,7 @@ def run_service():
 
     while True:
         try:
+            # get_messages_from_extractor_service()
             fake_sqs_payload = _generate_fake_sqs_msg()
 
             print(f"fake_sqs_payload: {fake_sqs_payload}")
@@ -41,17 +43,14 @@ def run_service():
 
             for msg in sqs_msg_list:
 
-                body = json.loads(msg.get("Body", {}))
-                transcript_url = body.get("transcript_url", "")
+                sqs_payload: SQSPayload = json.loads(msg.get("Body", {}))
 
                 embed_and_upload(
                     embedding_model=embedding_model,
                     qdrant_client=qdrant_client,
                     s3_client=s3_client,
-                    s3_transcript_url=transcript_url,
+                    sqs_payload=sqs_payload,
                 )
-
-            # get_messages_from_extractor_service()
 
         except ValueError as e:
             print(f"ValueError: {e}")

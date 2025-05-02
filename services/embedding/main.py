@@ -61,6 +61,7 @@ def embed_and_upload(
 
         chunks = chunk_text(full_text)
 
+        # NOTE: Do we need to add error handling for encoding chunks or upserting? 🤔
         vectors = embedding_model.encode(chunks, normalize_embeddings=True)
 
         points = []
