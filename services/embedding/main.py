@@ -4,6 +4,7 @@ import uuid
 import boto3
 from qdrant_client import QdrantClient, models
 from sentence_transformers import SentenceTransformer
+from utils.types.main import SQSPayload
 
 from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
 
@@ -33,11 +34,15 @@ def embed_and_upload(
     embedding_model: SentenceTransformer,
     qdrant_client: QdrantClient,
     s3_client: boto3.client,
-    s3_transcript_url: str,
+    sqs_payload: SQSPayload,
 ):
-    file_bytes = download_file_from_s3(s3_client, s3_transcript_url)
+    note_id = sqs_payload.get("note_id")
+    transcript_url = sqs_payload.get("transcript_url")
+    user_id = sqs_payload.get("user_id")
 
-    _, file_extension = os.path.splitext(s3_transcript_url)
+    file_bytes = download_file_from_s3(s3_client, transcript_url)
+
+    _, file_extension = os.path.splitext(transcript_url)
 
     file_extension = file_extension.lower()
 
@@ -55,9 +60,9 @@ def embed_and_upload(
                 id=str(uuid.uuid4()),  # unique ID per chunk
                 vector=vector.tolist(),
                 payload={
-                    "_id": str(transcript_id),
+                    "_id": str(note_id),
                     "user_id": user_id,
-                    "source_transcript_url": s3_transcript_url,
+                    "source_transcript_url": transcript_url,
                     "original_chunk_text": chunked_text,
                 },
             )
