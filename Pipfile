@@ -12,6 +12,7 @@ uuid = "*"
 pdfplumber = "*"
 beautifulsoup4 = "*"
 pymongo = "*"
+torch = "*"
 
 [dev-packages]
 pre-commit = "*"

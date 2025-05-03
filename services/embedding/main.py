@@ -2,6 +2,7 @@ import os
 import uuid
 
 import boto3
+import torch
 from qdrant_client import QdrantClient, models
 from sentence_transformers import SentenceTransformer
 
@@ -10,9 +11,11 @@ from services.utils.types.main import SQSPayload
 
 
 def get_embedd_model() -> SentenceTransformer:
-    embedd_model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    embedding_model = SentenceTransformer(embedd_model_name)
+    model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
+
+    embedding_model = SentenceTransformer(model_name_or_path=model_name, device=device)
 
     return embedding_model
 
