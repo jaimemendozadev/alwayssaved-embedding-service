@@ -1,5 +1,5 @@
-import json
 import os
+from concurrent.futures import Executor, ProcessPoolExecutor
 
 import boto3
 from dotenv import load_dotenv
@@ -9,7 +9,6 @@ from services.embedding.main import embed_and_upload, get_embedd_model
 
 # from services.aws.sqs import get_messages_from_extractor_service
 from services.qdrant.main import create_qdrant_collection, get_qdrant_client
-from services.utils.types.main import SQSPayload
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 s3_client = boto3.client("s3", region_name=AWS_REGION)
@@ -27,6 +26,7 @@ embedding_model = get_embedd_model()
 def run_service():
 
     create_qdrant_collection(qdrant_client)
+    executor: Executor = ProcessPoolExecutor()
 
     while True:
         try:
@@ -41,22 +41,24 @@ def run_service():
             if len(sqs_msg_list) == 0:
                 continue
 
-            for msg in sqs_msg_list:
+            embed_invoke_args = [
+                (embedding_model, qdrant_client, s3_client, msg) for msg in sqs_msg_list
+            ]
 
-                sqs_payload: SQSPayload = json.loads(msg.get("Body", {}))
+            embed_results = executor.map(
+                lambda embed_args: embed_and_upload(*embed_args), embed_invoke_args
+            )
 
-                embed_and_upload(
-                    embedding_model=embedding_model,
-                    qdrant_client=qdrant_client,
-                    s3_client=s3_client,
-                    sqs_payload=sqs_payload,
-                )
+            print(f"embed_results: {embed_results} \n")
+
+            # TODO: Fire SES Email, might have to be async with ThreadPoolExecutor
 
         except ValueError as e:
             print(f"ValueError: {e}")
 
 
-run_service()
+if __name__ == "__main__":
+    run_service()
 
 # pylint: disable=W0105
 """
