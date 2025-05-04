@@ -1,6 +1,7 @@
 import os
 
 from qdrant_client import QdrantClient
+from qdrant_client.conversions.common_types import CollectionInfo
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import Distance, VectorParams
 
@@ -41,3 +42,14 @@ def get_qdrant_client() -> QdrantClient | None:
     except ValueError as e:
         print(f"❌ Value Error: {e}")
         return None
+
+
+def get_qdrant_collection(q_client: QdrantClient) -> CollectionInfo | None:
+
+    try:
+        return q_client.get_collection(collection_name=QDRANT_COLLECTION_NAME)
+
+    except UnexpectedResponse as e:
+        print(f"❌ QdrantClient UnexpectedResponse Error: {e}\n")
+
+    return None
