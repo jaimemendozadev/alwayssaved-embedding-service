@@ -7,7 +7,10 @@ from qdrant_client import QdrantClient, models
 from sentence_transformers import SentenceTransformer
 
 from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
+from services.qdrant.main import get_qdrant_client
 from services.utils.types.main import SQSPayload
+
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
 
 
 def get_embedd_model() -> SentenceTransformer:
@@ -34,12 +37,13 @@ def chunk_text(text, chunk_size=1000, overlap=100):
 
 
 def embed_and_upload(
-    embedding_model: SentenceTransformer,
-    qdrant_client: QdrantClient,
     s3_client: boto3.client,
     sqs_payload: SQSPayload,
 ):
     try:
+        embedding_model: SentenceTransformer = get_embedd_model()
+        qdrant_client: QdrantClient = get_qdrant_client()
+
         note_id = sqs_payload.get("note_id", None)
         transcript_url = sqs_payload.get("transcript_url", None)
         user_id = sqs_payload.get("user_id", None)
@@ -87,9 +91,13 @@ def embed_and_upload(
                     },
                 )
             )
-        qdrant_client.upsert(collection_name="notecasts-transcripts", points=points)
+        qdrant_client.upsert(collection_name=QDRANT_COLLECTION_NAME, points=points)
 
         print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
 
     except ValueError as e:
         print(f"❌ Value Error: {e}")
+
+
+def executor_worker(args):
+    return embed_and_upload(*args)

@@ -5,10 +5,14 @@ import boto3
 from dotenv import load_dotenv
 
 from dev_utils.main import _generate_fake_sqs_msg
-from services.embedding.main import embed_and_upload, get_embedd_model
+from services.embedding.main import executor_worker
 
 # from services.aws.sqs import get_messages_from_extractor_service
-from services.qdrant.main import create_qdrant_collection, get_qdrant_client
+from services.qdrant.main import (
+    create_qdrant_collection,
+    get_qdrant_client,
+    get_qdrant_collection,
+)
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 s3_client = boto3.client("s3", region_name=AWS_REGION)
@@ -20,15 +24,26 @@ PYTHON_MODE = os.getenv("PYTHON_MODE", "production")
 
 
 qdrant_client = get_qdrant_client()
-embedding_model = get_embedd_model()
 
 
 def run_service():
-
-    create_qdrant_collection(qdrant_client)
     executor: Executor = ProcessPoolExecutor()
 
+    # ✅ Validate Qdrant client and collection once before entering loop
+    if qdrant_client is None:
+        print("❌ Qdrant client could not be instantiated. Exiting.")
+        return
+
+    create_qdrant_collection(qdrant_client)
+
+    collection_info = get_qdrant_collection(qdrant_client)
+
+    if collection_info is None:
+        print("❌ Qdrant collection not found and could not be created. Exiting.")
+        return
+
     while True:
+
         try:
             # get_messages_from_extractor_service()
             fake_sqs_payload = _generate_fake_sqs_msg()
@@ -41,13 +56,9 @@ def run_service():
             if len(sqs_msg_list) == 0:
                 continue
 
-            embed_invoke_args = [
-                (embedding_model, qdrant_client, s3_client, msg) for msg in sqs_msg_list
-            ]
+            embed_invoke_args = [(s3_client, msg) for msg in sqs_msg_list]
 
-            embed_results = executor.map(
-                lambda embed_args: embed_and_upload(*embed_args), embed_invoke_args
-            )
+            embed_results = executor.map(executor_worker, embed_invoke_args)
 
             print(f"embed_results: {embed_results} \n")
 
