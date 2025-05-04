@@ -1,7 +1,14 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 class SQSPayload(TypedDict):
     note_id: str
     transcript_url: str
     user_id: str
+
+
+EmbeddStatus = Literal["complete", "failed"]
+
+
+class EmbedStatus(SQSPayload):
+    process_status: EmbeddStatus
