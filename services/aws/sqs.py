@@ -7,14 +7,6 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from services.aws.ssm import get_secret
 
-# from bson import ObjectId
-
-
-# class EmbeddingPayload(TypedDict):
-#     _id: ObjectId
-#     transcriptURL: str
-
-
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
@@ -22,13 +14,14 @@ sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 def get_messages_from_extractor_service(
     max_messages=10, wait_time=120
 ) -> Dict[str, Any]:
-    embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
-
-    if not embedding_push_queue_url:
-        print("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
-        return {}
 
     try:
+
+        embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
+
+        if not embedding_push_queue_url:
+            raise ValueError("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
+
         response = sqs_client.receive_message(
             QueueUrl=embedding_push_queue_url,
             MaxNumberOfMessages=max_messages,  # You can adjust this to batch process more users
@@ -48,7 +41,7 @@ def get_messages_from_extractor_service(
     except BotoCoreError as e:
         print(f"❌ Boto3 Internal Error: {str(e)}")
 
-    except Exception as e:
+    except ValueError as e:
         print(f"❌ Unexpected Error: {str(e)}")
 
     return {}

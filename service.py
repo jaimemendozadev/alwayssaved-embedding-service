@@ -4,10 +4,8 @@ from concurrent.futures import Executor, ProcessPoolExecutor
 import boto3
 from dotenv import load_dotenv
 
-from dev_utils.main import _generate_fake_sqs_msg
+from services.aws.sqs import get_messages_from_extractor_service
 from services.embedding.main import executor_worker
-
-# from services.aws.sqs import get_messages_from_extractor_service
 from services.qdrant.main import (
     create_qdrant_collection,
     get_qdrant_client,
@@ -45,13 +43,10 @@ def run_service():
     while True:
 
         try:
-            # get_messages_from_extractor_service()
-            fake_sqs_payload = _generate_fake_sqs_msg()
 
-            print(f"fake_sqs_payload: {fake_sqs_payload}")
-            print("\n")
+            sqs_payload = get_messages_from_extractor_service()
 
-            sqs_msg_list = fake_sqs_payload.get("Messages", [])
+            sqs_msg_list = sqs_payload.get("Messages", [])
 
             if len(sqs_msg_list) == 0:
                 continue
