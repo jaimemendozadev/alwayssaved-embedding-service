@@ -2,51 +2,19 @@ import os
 import uuid
 
 import boto3
-import torch
 from qdrant_client import QdrantClient, models
 from sentence_transformers import SentenceTransformer
 
 from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
+from services.embedding.utils.main import (
+    chunk_text,
+    get_embedd_model,
+    handle_error_feedback,
+)
 from services.qdrant.main import get_qdrant_client
 from services.utils.types.main import EmbedStatus, SQSPayload
 
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
-
-
-def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
-    note_id = sqs_payload.get("note_id", "")
-    transcript_url = sqs_payload.get("transcript_url", "")
-    user_id = sqs_payload.get("user_id", "")
-
-    return {
-        "note_id": note_id,
-        "transcript_url": transcript_url,
-        "user_id": user_id,
-        "process_status": "failed",
-    }
-
-
-def get_embedd_model() -> SentenceTransformer:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
-
-    embedding_model = SentenceTransformer(model_name_or_path=model_name, device=device)
-
-    return embedding_model
-
-
-def chunk_text(text, chunk_size=1000, overlap=100):
-    chunks = []
-    start = 0
-
-    while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk)
-        start += chunk_size - overlap
-
-    return chunks
 
 
 def embed_and_upload(
@@ -124,13 +92,13 @@ def embed_and_upload(
 
         return handle_error_feedback(sqs_payload)
 
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    except ValueError as e:
+        print(f"❌ Value Error: {e}")
 
         return handle_error_feedback(sqs_payload)
 
-    except ValueError as e:
-        print(f"❌ Value Error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
         return handle_error_feedback(sqs_payload)
 

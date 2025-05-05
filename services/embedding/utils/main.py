@@ -1,0 +1,42 @@
+import os
+
+import torch
+from sentence_transformers import SentenceTransformer
+
+from services.utils.types.main import EmbedStatus, SQSPayload
+
+
+def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
+    note_id = sqs_payload.get("note_id", "")
+    transcript_url = sqs_payload.get("transcript_url", "")
+    user_id = sqs_payload.get("user_id", "")
+
+    return {
+        "note_id": note_id,
+        "transcript_url": transcript_url,
+        "user_id": user_id,
+        "process_status": "failed",
+    }
+
+
+def get_embedd_model() -> SentenceTransformer:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
+
+    embedding_model = SentenceTransformer(model_name_or_path=model_name, device=device)
+
+    return embedding_model
+
+
+def chunk_text(text, chunk_size=1000, overlap=100):
+    chunks = []
+    start = 0
+
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += chunk_size - overlap
+
+    return chunks
