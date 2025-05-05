@@ -13,6 +13,19 @@ from services.utils.types.main import EmbedStatus, SQSPayload
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
 
 
+def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
+    note_id = sqs_payload.get("note_id", "")
+    transcript_url = sqs_payload.get("transcript_url", "")
+    user_id = sqs_payload.get("user_id", "")
+
+    return {
+        "note_id": note_id,
+        "transcript_url": transcript_url,
+        "user_id": user_id,
+        "process_status": "failed",
+    }
+
+
 def get_embedd_model() -> SentenceTransformer:
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -43,6 +56,11 @@ def embed_and_upload(
     try:
         embedding_model: SentenceTransformer = get_embedd_model()
         qdrant_client: QdrantClient = get_qdrant_client()
+
+        if embedding_model is None or qdrant_client is None:
+            raise ValueError(
+                "Can't process sqs_payload due to missing embedding model or qdrant client."
+            )
 
         note_id = sqs_payload.get("note_id", None)
         transcript_url = sqs_payload.get("transcript_url", None)
@@ -101,20 +119,20 @@ def embed_and_upload(
             "user_id": user_id,
             "process_status": "complete",
         }
+    except TypeError as e:
+        print(f"An error occurred: {e}")
+
+        return handle_error_feedback(sqs_payload)
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+        return handle_error_feedback(sqs_payload)
 
     except ValueError as e:
         print(f"❌ Value Error: {e}")
 
-        note_id = sqs_payload.get("note_id", "")
-        transcript_url = sqs_payload.get("transcript_url", "")
-        user_id = sqs_payload.get("user_id", "")
-
-        return {
-            "note_id": note_id,
-            "transcript_url": transcript_url,
-            "user_id": user_id,
-            "process_status": "failed",
-        }
+        return handle_error_feedback(sqs_payload)
 
 
 def executor_worker(args):
