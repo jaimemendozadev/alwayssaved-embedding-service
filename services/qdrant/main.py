@@ -28,8 +28,8 @@ def create_qdrant_collection(q_client: QdrantClient) -> None:
 def get_qdrant_client() -> QdrantClient | None:
 
     try:
-        qdrant_url = get_secret("/notecasts/QDRANT_URL")
-        qdrant_api_key = get_secret("/notecasts/QDRANT_API_KEY")
+        qdrant_url = get_secret("/alwayssaved/QDRANT_URL")
+        qdrant_api_key = get_secret("/alwayssaved/QDRANT_API_KEY")
 
         if qdrant_url is None or qdrant_api_key is None:
             raise ValueError(

@@ -17,7 +17,7 @@ def get_messages_from_extractor_service(
 
     try:
 
-        embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
+        embedding_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
 
         if not embedding_push_queue_url:
             raise ValueError("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
@@ -50,7 +50,7 @@ def get_messages_from_extractor_service(
 def send_embedding_sqs_message(sqs_payload):
     """Sends a message to the SQS embedding_push_queue indicating the transcript is ready for embedding process."""
 
-    embedding_push_queue_url = get_secret("/notecasts/EMBEDDING_PUSH_QUEUE_URL")
+    embedding_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
 
     if not embedding_push_queue_url:
         print("⚠️ ERROR: SQS Embedding PushQueue URL not set!")
