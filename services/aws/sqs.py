@@ -12,7 +12,7 @@ sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
 
 def get_messages_from_extractor_service(
-    max_messages=10, wait_time=120
+    max_messages=10, wait_time=20
 ) -> Dict[str, Any]:
 
     try:
