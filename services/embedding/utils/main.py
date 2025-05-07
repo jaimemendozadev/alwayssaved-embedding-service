@@ -3,11 +3,11 @@ import os
 import torch
 from sentence_transformers import SentenceTransformer
 
-from services.utils.types.main import EmbeddStatus, EmbedStatus, SQSPayload
+from services.utils.types.main import EmbedStatus, SQSPayload, process_status
 
 
 def handle_msg_feedback(
-    sqs_payload: SQSPayload, process_status: EmbeddStatus
+    sqs_payload: SQSPayload, process_status: process_status
 ) -> EmbedStatus:
     note_id = sqs_payload.get("note_id", "")
     sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")

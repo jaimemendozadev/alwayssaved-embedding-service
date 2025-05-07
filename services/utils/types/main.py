@@ -8,8 +8,8 @@ class SQSPayload(TypedDict):
     sqs_receipt_handle: str
 
 
-EmbeddStatus = Literal["complete", "failed"]
+process_status = Literal["complete", "failed"]
 
 
 class EmbedStatus(SQSPayload):
-    process_status: EmbeddStatus
+    process_status: process_status
