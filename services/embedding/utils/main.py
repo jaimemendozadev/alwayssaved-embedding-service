@@ -8,11 +8,13 @@ from services.utils.types.main import EmbedStatus, SQSPayload
 
 def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
     note_id = sqs_payload.get("note_id", "")
+    sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")
     transcript_url = sqs_payload.get("transcript_url", "")
     user_id = sqs_payload.get("user_id", "")
 
     return {
         "note_id": note_id,
+        "sqs_receipt_handle": sqs_receipt_handle,
         "transcript_url": transcript_url,
         "user_id": user_id,
         "process_status": "failed",
