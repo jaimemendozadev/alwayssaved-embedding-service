@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -45,6 +45,31 @@ def get_messages_from_extractor_service(
         print(f"❌ Unexpected Error: {str(e)}")
 
     return {}
+
+
+def process_incoming_sqs_messages(
+    incoming_payload: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    sqs_msg_list = incoming_payload.get("Messages", [])
+
+    if len(sqs_msg_list) == 0:
+        return sqs_msg_list
+
+    processed_list: List[Dict[str, Any]] = []
+
+    for msg in sqs_msg_list:
+        payload_body = json.loads(msg.get("Body", {}))
+        receipt_handle = msg.get("ReceiptHandle", None)
+        processed_msg = {}
+
+        processed_msg["note_id"] = payload_body.get("note_id", None)
+        processed_msg["transcript_url"] = payload_body.get("transcript_url", None)
+        processed_msg["user_id"] = payload_body.get("user_id", None)
+        processed_msg["sqs_receipt_handle"] = receipt_handle
+
+        processed_list.append(processed_msg)
+
+    return processed_list
 
 
 def send_embedding_sqs_message(sqs_payload):

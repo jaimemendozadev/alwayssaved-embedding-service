@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from services.aws.sqs import (
     get_messages_from_extractor_service,
+    process_incoming_sqs_messages,
 )
 from services.embedding.main import executor_worker
 from services.qdrant.main import (
@@ -48,7 +49,7 @@ def run_service():
 
             sqs_payload = get_messages_from_extractor_service()
 
-            sqs_msg_list = sqs_payload.get("Messages", [])
+            sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
 
             if len(sqs_msg_list) == 0:
                 continue
