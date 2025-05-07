@@ -11,10 +11,11 @@ from services.utils.types.main import EmbedStatus, SQSPayload
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
+MAX_MESSAGES = 10
+WAIT_TIME = 2700
 
-def get_messages_from_extractor_service(
-    max_messages=10, wait_time=20
-) -> Dict[str, Any]:
+
+def get_messages_from_extractor_service() -> Dict[str, Any]:
 
     try:
 
@@ -25,8 +26,8 @@ def get_messages_from_extractor_service(
 
         response = sqs_client.receive_message(
             QueueUrl=embedding_push_queue_url,
-            MaxNumberOfMessages=max_messages,  # You can adjust this to batch process more users
-            WaitTimeSeconds=wait_time,  # Long polling to reduce API calls
+            MaxNumberOfMessages=MAX_MESSAGES,  # You can adjust this to batch process more users
+            WaitTimeSeconds=WAIT_TIME,  # Long polling to reduce API calls
         )
 
         print(f"response from EMBEDDING_PUSH_QUEUE {response}")

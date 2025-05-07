@@ -70,7 +70,7 @@ def embed_and_upload(
 
         points = []
 
-        for idx, (chunked_text, vector) in enumerate(zip(chunks, vectors)):
+        for _, (chunked_text, vector) in enumerate(zip(chunks, vectors)):
             points.append(
                 models.PointStruct(
                     id=str(uuid.uuid4()),  # unique ID per chunk
