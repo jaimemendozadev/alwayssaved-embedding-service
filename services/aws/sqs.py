@@ -137,3 +137,35 @@ def delete_embedding_sqs_message(processed_sqs_msg: Dict[str, Any]):
 
     except Exception as e:
         print(f"❌ Unexpected Error: {str(e)}")
+
+
+def delete_extractor_sqs_message(processed_msg_list: List[Dict[str, Any]]):
+
+    extractor_push_queue_url = get_secret("/alwayssaved/EXTRACTOR_PUSH_QUEUE_URL")
+
+    if not extractor_push_queue_url:
+        print("⚠️ ERROR: SQS Queue URL not set for delete_extractor_sqs_message!")
+        return
+
+    try:
+        for msg in processed_msg_list:
+            receipt_handle = msg.get("sqs_receipt_handle", None)
+
+            sqs_client.delete_message(
+                QueueUrl=extractor_push_queue_url, ReceiptHandle=receipt_handle
+            )
+
+            print(
+                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['MessageId']}"
+            )
+
+    except ClientError as e:
+        print(
+            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']}"
+        )
+
+    except BotoCoreError as e:
+        print(f"❌ Boto3 Internal Error: {str(e)}")
+
+    except Exception as e:
+        print(f"❌ Unexpected Error: {str(e)}")

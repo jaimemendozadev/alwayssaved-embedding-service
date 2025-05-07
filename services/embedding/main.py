@@ -87,7 +87,6 @@ def embed_and_upload(
 
         print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
 
-        # ReceiptHandle
         return {
             "note_id": note_id,
             "sqs_receipt_handle": sqs_receipt_handle,
