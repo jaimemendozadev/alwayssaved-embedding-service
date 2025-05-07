@@ -33,16 +33,10 @@ def embed_and_upload(
         note_id = sqs_payload.get("note_id", None)
         transcript_url = sqs_payload.get("transcript_url", None)
         user_id = sqs_payload.get("user_id", None)
-        sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", None)
 
-        if (
-            note_id is None
-            or transcript_url is None
-            or user_id is None
-            or sqs_receipt_handle is None
-        ):
+        if note_id is None or transcript_url is None or user_id is None:
             raise ValueError(
-                f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, transcript_url: {transcript_url}, or sqs_receipt_handle: {sqs_receipt_handle} \n"
+                f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, or transcript_url: {transcript_url} \n"
             )
 
         file_bytes = download_file_from_s3(s3_client, transcript_url)

@@ -61,18 +61,18 @@ def process_incoming_sqs_messages(
 
     for msg in sqs_msg_list:
         payload_body = json.loads(msg.get("Body", {}))
-        receipt_handle = msg.get("ReceiptHandle", None)
+
         processed_msg: SQSPayload = {
+            "message_id": msg.get("MessageId", ""),
             "note_id": "",
             "transcript_url": "",
             "user_id": "",
-            "sqs_receipt_handle": "",
+            "sqs_receipt_handle": msg.get("ReceiptHandle", ""),
         }
 
         processed_msg["note_id"] = payload_body.get("note_id", "")
         processed_msg["transcript_url"] = payload_body.get("transcript_url", "")
         processed_msg["user_id"] = payload_body.get("user_id", "")
-        processed_msg["sqs_receipt_handle"] = receipt_handle
 
         processed_list.append(processed_msg)
 
@@ -97,7 +97,7 @@ def delete_extractor_sqs_message(processed_success_list: List[EmbedStatus]):
 
             # NOTE: We might need to add the message_id to the EmbedStatus payload.
             print(
-                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['sqs_receipt_handle']}"
+                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['message_id']}"
             )
 
     except ClientError as e:
