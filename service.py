@@ -5,6 +5,7 @@ import boto3
 from dotenv import load_dotenv
 
 from services.aws.sqs import (
+    delete_extractor_sqs_message,
     get_messages_from_extractor_service,
     process_incoming_sqs_messages,
 )
@@ -56,9 +57,15 @@ def run_service():
 
             embed_invoke_args = [(s3_client, msg) for msg in sqs_msg_list]
 
-            embed_results = executor.map(executor_worker, embed_invoke_args)
+            raw_results = list(executor.map(executor_worker, embed_invoke_args))
 
-            print(f"embed_results: {embed_results} \n")
+            successful_results = [
+                res for res in raw_results if res.get("process_status") == "complete"
+            ]
+
+            print(f"successful_results: {successful_results} \n")
+
+            delete_extractor_sqs_message(successful_results)
 
             # TODO: Fire SES Email, might have to be async with ThreadPoolExecutor
 
