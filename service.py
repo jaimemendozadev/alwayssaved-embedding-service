@@ -1,4 +1,5 @@
 import os
+import time
 from concurrent.futures import Executor, ProcessPoolExecutor
 
 import boto3
@@ -48,16 +49,34 @@ def run_service():
 
         try:
 
+            # 1) Get Extractor Queue Messages & Process.
+            dequeue_start = time.time()
             sqs_payload = get_messages_from_extractor_service()
 
             sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
+
+            dequeue_end = time.time()
+            dequeue_elapsed_time = dequeue_end - dequeue_start
+            print(
+                f"Elapsed time for Extractor SQS dequeue/processing: {dequeue_elapsed_time} \n"
+            )
 
             if len(sqs_msg_list) == 0:
                 continue
 
             embed_invoke_args = [(s3_client, msg) for msg in sqs_msg_list]
 
+            # 2) Embedd & Upload Every Message to Qdrant Database.
+            embedd_start = time.time()
+
             raw_results = list(executor.map(executor_worker, embed_invoke_args))
+
+            embedd_end = time.time()
+
+            embedd_elapsed_time = embedd_end - embedd_start
+            print(
+                f"Elapsed time for Embedd and Upload to Qdrant Step: {embedd_elapsed_time} \n"
+            )
 
             successful_results = [
                 res for res in raw_results if res.get("process_status") == "complete"
@@ -65,9 +84,11 @@ def run_service():
 
             print(f"successful_results: {successful_results} \n")
 
+            # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
             delete_extractor_sqs_message(successful_results)
 
-            # TODO: Fire SES Email, might have to be async with ThreadPoolExecutor
+            # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
+            #    Might have to be async with ThreadPoolExecutor
 
         except ValueError as e:
             print(f"ValueError: {e}")
