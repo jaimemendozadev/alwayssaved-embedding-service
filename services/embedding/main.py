@@ -9,7 +9,7 @@ from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
 from services.embedding.utils.main import (
     chunk_text,
     get_embedd_model,
-    handle_error_feedback,
+    handle_msg_feedback,
 )
 from services.qdrant.main import get_qdrant_client
 from services.utils.types.main import EmbedStatus, SQSPayload
@@ -87,27 +87,22 @@ def embed_and_upload(
 
         print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
 
-        return {
-            "note_id": note_id,
-            "sqs_receipt_handle": sqs_receipt_handle,
-            "transcript_url": transcript_url,
-            "user_id": user_id,
-            "process_status": "complete",
-        }
+        return handle_msg_feedback(sqs_payload, "complete")
+
     except TypeError as e:
         print(f"An error occurred: {e}")
 
-        return handle_error_feedback(sqs_payload)
+        return handle_msg_feedback(sqs_payload, "failed")
 
     except ValueError as e:
         print(f"❌ Value Error: {e}")
 
-        return handle_error_feedback(sqs_payload)
+        return handle_msg_feedback(sqs_payload, "failed")
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-        return handle_error_feedback(sqs_payload)
+        return handle_msg_feedback(sqs_payload, "failed")
 
 
 def executor_worker(args):

@@ -3,10 +3,12 @@ import os
 import torch
 from sentence_transformers import SentenceTransformer
 
-from services.utils.types.main import EmbedStatus, SQSPayload
+from services.utils.types.main import EmbeddStatus, EmbedStatus, SQSPayload
 
 
-def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
+def handle_msg_feedback(
+    sqs_payload: SQSPayload, process_status: EmbeddStatus
+) -> EmbedStatus:
     note_id = sqs_payload.get("note_id", "")
     sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")
     transcript_url = sqs_payload.get("transcript_url", "")
@@ -17,7 +19,7 @@ def handle_error_feedback(sqs_payload: SQSPayload) -> EmbedStatus:
         "sqs_receipt_handle": sqs_receipt_handle,
         "transcript_url": transcript_url,
         "user_id": user_id,
-        "process_status": "failed",
+        "process_status": process_status,
     }
 
 
