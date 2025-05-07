@@ -82,3 +82,33 @@ def send_embedding_sqs_message(sqs_payload):
 
     except Exception as e:
         print(f"❌ Unexpected Error: {str(e)}")
+
+
+def delete_embedding_sqs_message(processed_sqs_msg: Dict[str, Any]):
+
+    embedding_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
+
+    if not embedding_push_queue_url:
+        print("⚠️ ERROR: SQS Queue URL not set for delete_embedding_sqs_message!")
+        return
+
+    try:
+        receipt_handle = processed_sqs_msg.get("ReceiptHandle", None)
+
+        sqs_client.delete_message(
+            QueueUrl=embedding_push_queue_url, ReceiptHandle=receipt_handle
+        )
+        print(
+            f"✅ SQS Message Deleted from Embedding Push Queue: {processed_sqs_msg['MessageId']}"
+        )
+
+    except ClientError as e:
+        print(
+            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']}"
+        )
+
+    except BotoCoreError as e:
+        print(f"❌ Boto3 Internal Error: {str(e)}")
+
+    except Exception as e:
+        print(f"❌ Unexpected Error: {str(e)}")

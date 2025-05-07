@@ -4,7 +4,9 @@ from concurrent.futures import Executor, ProcessPoolExecutor
 import boto3
 from dotenv import load_dotenv
 
-from services.aws.sqs import get_messages_from_extractor_service
+from services.aws.sqs import (
+    get_messages_from_extractor_service,
+)
 from services.embedding.main import executor_worker
 from services.qdrant.main import (
     create_qdrant_collection,
