@@ -1,4 +1,5 @@
 import os
+import traceback
 import uuid
 
 import boto3
@@ -84,17 +85,26 @@ def embed_and_upload(
         return handle_msg_feedback(sqs_payload, "complete")
 
     except TypeError as e:
-        print(f"An error occurred: {e}")
+        print(
+            f"❌ Unexpected TypeError occurred for note_id={note_id}, user_id={user_id}: {e}"
+        )
+        traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
     except ValueError as e:
-        print(f"❌ Value Error: {e}")
+        print(
+            f"❌ Unexpected ValueError occurred for note_id={note_id}, user_id={user_id}: {e}"
+        )
+        traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(
+            f"❌ Unexpected Exception occurred for note_id={note_id}, user_id={user_id}: {e}"
+        )
+        traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
