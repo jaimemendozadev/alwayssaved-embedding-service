@@ -1,6 +1,6 @@
 import os
 import time
-from concurrent.futures import Executor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 import boto3
 from dotenv import load_dotenv
@@ -30,7 +30,6 @@ qdrant_client = get_qdrant_client()
 
 
 def run_service():
-    executor: Executor = ProcessPoolExecutor()
 
     # ✅ Validate Qdrant client and collection once before entering loop
     if qdrant_client is None:
@@ -62,6 +61,7 @@ def run_service():
             )
 
             if len(sqs_msg_list) == 0:
+                time.sleep(2)
                 continue
 
             embed_invoke_args = [(s3_client, msg) for msg in sqs_msg_list]
@@ -70,7 +70,9 @@ def run_service():
             embedd_start = time.time()
 
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
-            raw_results = list(executor.map(executor_worker, embed_invoke_args))
+            # Ensures Fresh Worker Processes Each Batch
+            with ProcessPoolExecutor() as executor:
+                raw_results = list(executor.map(executor_worker, embed_invoke_args))
 
             embedd_end = time.time()
 
