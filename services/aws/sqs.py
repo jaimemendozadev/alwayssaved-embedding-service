@@ -12,7 +12,8 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
 MAX_MESSAGES = 10
-WAIT_TIME = 2700
+WAIT_TIME = 20
+VISIBILITY_TIMEOUT = 2700
 
 
 def get_messages_from_extractor_service() -> Dict[str, Any]:
@@ -28,6 +29,7 @@ def get_messages_from_extractor_service() -> Dict[str, Any]:
             QueueUrl=embedding_push_queue_url,
             MaxNumberOfMessages=MAX_MESSAGES,  # You can adjust this to batch process more users
             WaitTimeSeconds=WAIT_TIME,  # Long polling to reduce API calls
+            VisibilityTimeout=VISIBILITY_TIMEOUT,
         )
 
         print(f"response from EMBEDDING_PUSH_QUEUE {response}")

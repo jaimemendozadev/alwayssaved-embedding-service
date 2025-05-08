@@ -69,6 +69,7 @@ def run_service():
             # 2) Embedd & Upload Every Message to Qdrant Database.
             embedd_start = time.time()
 
+            # TODO: Handle Message Loss Protection / Idempotency During Embedding
             raw_results = list(executor.map(executor_worker, embed_invoke_args))
 
             embedd_end = time.time()
