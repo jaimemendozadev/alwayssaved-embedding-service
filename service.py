@@ -10,7 +10,7 @@ from services.aws.sqs import (
     get_messages_from_extractor_service,
     process_incoming_sqs_messages,
 )
-from services.embedding.main import executor_worker
+from services.embedding.main import embed_and_upload
 from services.qdrant.main import (
     create_qdrant_collection,
     get_qdrant_client,
@@ -62,8 +62,6 @@ def run_service():
                 time.sleep(2)
                 continue
 
-            embed_invoke_args = [(msg) for msg in sqs_msg_list]
-
             # 2) Embedd & Upload Every Message to Qdrant Database.
             print("Start Embedding and Uploading Messages to Qdrant Database. \n")
             embedd_start = time.time()
@@ -71,7 +69,7 @@ def run_service():
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
             # Ensures Fresh Worker Processes Each Batch
             with ProcessPoolExecutor() as executor:
-                raw_results = list(executor.map(executor_worker, embed_invoke_args))
+                raw_results = list(executor.map(embed_and_upload, sqs_msg_list))
 
             embedd_end = time.time()
 

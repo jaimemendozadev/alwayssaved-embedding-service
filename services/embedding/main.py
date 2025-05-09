@@ -21,7 +21,9 @@ QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
 def embed_and_upload(
     sqs_payload: SQSPayload,
 ) -> EmbedStatus:
+
     try:
+        print(f"Incoming sqs_payload in embed_and_upload: {sqs_payload} \n")
         aws_region = os.getenv("AWS_REGION", "us-east-1")
         s3_client = boto3.client("s3", region_name=aws_region)
 
@@ -109,7 +111,3 @@ def embed_and_upload(
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
-
-
-def executor_worker(args):
-    return embed_and_upload(*args)
