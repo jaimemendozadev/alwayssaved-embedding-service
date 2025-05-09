@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import traceback
@@ -24,6 +25,11 @@ PYTHON_MODE = os.getenv("PYTHON_MODE", "production")
 
 
 qdrant_client = get_qdrant_client()
+
+
+def executor_worker(json_payload: str):
+    payload_dict = json.loads(json_payload)
+    return embed_and_upload(payload_dict)
 
 
 def run_service():
@@ -66,12 +72,12 @@ def run_service():
             print("Start Embedding and Uploading Messages to Qdrant Database. \n")
             embedd_start = time.time()
 
+            jsonified_inputs = [json.dumps(msg) for msg in sqs_msg_list]
+
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
             # Ensures Fresh Worker Processes Each Batch
             with ProcessPoolExecutor() as executor:
-                raw_results = list(
-                    executor.map(lambda msg: embed_and_upload(msg), sqs_msg_list)
-                )
+                raw_results = list(executor.map(executor_worker, jsonified_inputs))
 
             embedd_end = time.time()
 
