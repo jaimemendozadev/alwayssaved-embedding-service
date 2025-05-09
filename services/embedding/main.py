@@ -22,8 +22,8 @@ def embed_and_upload(
     sqs_payload: SQSPayload,
 ) -> EmbedStatus:
     try:
-        AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-        s3_client = boto3.client("s3", region_name=AWS_REGION)
+        aws_region = os.getenv("AWS_REGION", "us-east-1")
+        s3_client = boto3.client("s3", region_name=aws_region)
 
         embedding_model: SentenceTransformer = get_embedd_model()
         qdrant_client: QdrantClient = get_qdrant_client()

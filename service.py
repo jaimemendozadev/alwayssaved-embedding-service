@@ -1,11 +1,12 @@
 import os
 import time
+import traceback
 from concurrent.futures import ProcessPoolExecutor
 
 from dotenv import load_dotenv
 
 from services.aws.sqs import (
-    delete_extractor_sqs_message,
+    delete_embedding_sqs_message,
     get_messages_from_extractor_service,
     process_incoming_sqs_messages,
 )
@@ -91,13 +92,14 @@ def run_service():
             print(
                 "Start deleting successfully process messages from Embedding Push Queue. \n"
             )
-            delete_extractor_sqs_message(successful_results)
+            delete_embedding_sqs_message(successful_results)
 
             # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
             #    Might have to be async with ThreadPoolExecutor
 
         except ValueError as e:
             print(f"ValueError: {e}")
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

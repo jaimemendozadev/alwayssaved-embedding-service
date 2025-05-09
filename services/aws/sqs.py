@@ -32,21 +32,23 @@ def get_messages_from_extractor_service() -> Dict[str, Any]:
             VisibilityTimeout=VISIBILITY_TIMEOUT,
         )
 
-        print(f"response from EMBEDDING_PUSH_QUEUE {response}")
+        print(
+            f"response from receive_message in get_messages_from_extractor_service: {response} \n"
+        )
         print("\n")
 
         return response
 
     except ClientError as e:
         print(
-            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']}"
+            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']} \n"
         )
 
     except BotoCoreError as e:
-        print(f"❌ Boto3 Internal Error: {str(e)}")
+        print(f"❌ Boto3 Internal Error: {str(e)} \n")
 
     except ValueError as e:
-        print(f"❌ Unexpected Error: {str(e)}")
+        print(f"❌ Unexpected Error: {str(e)} \n")
 
     return {}
 
@@ -81,12 +83,12 @@ def process_incoming_sqs_messages(
     return processed_list
 
 
-def delete_extractor_sqs_message(processed_success_list: List[EmbedStatus]):
+def delete_embedding_sqs_message(processed_success_list: List[EmbedStatus]):
 
-    extractor_push_queue_url = get_secret("/alwayssaved/EXTRACTOR_PUSH_QUEUE_URL")
+    extractor_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
 
     if not extractor_push_queue_url:
-        print("⚠️ ERROR: SQS Queue URL not set for delete_extractor_sqs_message!")
+        print("⚠️ ERROR: SQS Queue URL not set for delete_embedding_sqs_message!")
         return
 
     try:
@@ -97,18 +99,17 @@ def delete_extractor_sqs_message(processed_success_list: List[EmbedStatus]):
                 QueueUrl=extractor_push_queue_url, ReceiptHandle=receipt_handle
             )
 
-            # NOTE: We might need to add the message_id to the EmbedStatus payload.
             print(
-                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['message_id']}"
+                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['message_id']} \n"
             )
 
     except ClientError as e:
         print(
-            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']}"
+            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']} \n"
         )
 
     except BotoCoreError as e:
-        print(f"❌ Boto3 Internal Error: {str(e)}")
+        print(f"❌ Boto3 Internal Error: {str(e)} \n")
 
     except Exception as e:
-        print(f"❌ Unexpected Error: {str(e)}")
+        print(f"❌ Unexpected Error: {str(e)} \n")
