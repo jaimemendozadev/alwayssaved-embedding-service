@@ -1,5 +1,5 @@
 from io import BytesIO
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import boto3
 import botocore
@@ -35,7 +35,11 @@ def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
         bucket = parsed_url.netloc.split(".")[
             0
         ]  # Gets 'my-bucket' from 'my-bucket.s3.us-west-2.amazonaws.com'
-        key = parsed_url.path.lstrip("/")  # Remove leading slash
+
+        key = unquote(
+            parsed_url.path.lstrip("/")
+        )  # Remove leading slash, then Decode %20, +, etc.
+
         response = s3_client.get_object(Bucket=bucket, Key=key)
         return response["Body"].read()
     except botocore.exceptions.ClientError as e:
