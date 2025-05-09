@@ -19,16 +19,18 @@ QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
 
 
 def embed_and_upload(
-    s3_client: boto3.client,
     sqs_payload: SQSPayload,
 ) -> EmbedStatus:
     try:
+        AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+        s3_client = boto3.client("s3", region_name=AWS_REGION)
+
         embedding_model: SentenceTransformer = get_embedd_model()
         qdrant_client: QdrantClient = get_qdrant_client()
 
-        if embedding_model is None or qdrant_client is None:
+        if embedding_model is None or qdrant_client is None or s3_client is None:
             raise ValueError(
-                "Can't process sqs_payload due to missing embedding model or qdrant client."
+                "Can't process sqs_payload due to missing embedding model, qdrant client, or s3 client. \n"
             )
 
         note_id = sqs_payload.get("note_id", None)

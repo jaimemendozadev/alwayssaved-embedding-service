@@ -2,7 +2,6 @@ import os
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-import boto3
 from dotenv import load_dotenv
 
 from services.aws.sqs import (
@@ -16,9 +15,6 @@ from services.qdrant.main import (
     get_qdrant_client,
     get_qdrant_collection,
 )
-
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 load_dotenv()
 
@@ -49,6 +45,7 @@ def run_service():
         try:
 
             # 1) Get Extractor Queue Messages & Process.
+            print("Start Extracting and Processing Queue Messages. \n")
             dequeue_start = time.time()
             sqs_payload = get_messages_from_extractor_service()
 
@@ -57,16 +54,17 @@ def run_service():
             dequeue_end = time.time()
             dequeue_elapsed_time = dequeue_end - dequeue_start
             print(
-                f"Elapsed time for Extractor SQS dequeue/processing: {dequeue_elapsed_time} \n"
+                f"Elapsed time for Extracting and Processing Queue Messages: {dequeue_elapsed_time} \n"
             )
 
             if len(sqs_msg_list) == 0:
                 time.sleep(2)
                 continue
 
-            embed_invoke_args = [(s3_client, msg) for msg in sqs_msg_list]
+            embed_invoke_args = [(msg) for msg in sqs_msg_list]
 
             # 2) Embedd & Upload Every Message to Qdrant Database.
+            print("Start Embedding and Uploading Messages to Qdrant Database. \n")
             embedd_start = time.time()
 
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
@@ -78,16 +76,21 @@ def run_service():
 
             embedd_elapsed_time = embedd_end - embedd_start
             print(
-                f"Elapsed time for Embedd and Upload to Qdrant Step: {embedd_elapsed_time} \n"
+                f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time} \n"
             )
 
             successful_results = [
                 res for res in raw_results if res.get("process_status") == "complete"
             ]
 
-            print(f"successful_results: {successful_results} \n")
+            print(
+                f"successfully process messages after embedding and uploading step: {successful_results} \n"
+            )
 
             # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
+            print(
+                "Start deleting successfully process messages from Embedding Push Queue. \n"
+            )
             delete_extractor_sqs_message(successful_results)
 
             # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
