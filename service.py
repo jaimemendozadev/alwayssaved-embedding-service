@@ -69,7 +69,9 @@ def run_service():
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
             # Ensures Fresh Worker Processes Each Batch
             with ProcessPoolExecutor() as executor:
-                raw_results = list(executor.map(embed_and_upload, sqs_msg_list))
+                raw_results = list(
+                    executor.map(lambda msg: embed_and_upload(msg), sqs_msg_list)
+                )
 
             embedd_end = time.time()
 
