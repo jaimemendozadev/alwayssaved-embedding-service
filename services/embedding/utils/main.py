@@ -14,12 +14,14 @@ def handle_msg_feedback(
     sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")
     transcript_url = sqs_payload.get("transcript_url", "")
     user_id = sqs_payload.get("user_id", "")
+    transcript_key = sqs_payload.get("transcript_key", "")
 
     return {
         "message_id": message_id,
         "note_id": note_id,
         "sqs_receipt_handle": sqs_receipt_handle,
         "transcript_url": transcript_url,
+        "transcript_key": transcript_key,
         "user_id": user_id,
         "process_status": process_result,
     }

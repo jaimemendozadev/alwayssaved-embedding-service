@@ -121,8 +121,9 @@ Dev Notes 5/2/25:
 - Incoming SQS Message has the following shape:
   {
     note_id: string;
-    user_id: string;
     transcript_url: string;
+    transcript_key: string;
+    user_id: string;
   }
 
 

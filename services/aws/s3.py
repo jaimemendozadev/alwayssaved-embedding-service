@@ -1,10 +1,12 @@
 from io import BytesIO
-from urllib.parse import unquote, urlparse
 
 import boto3
 import botocore
 import pdfplumber
 from bs4 import BeautifulSoup
+
+from services.aws.ssm import get_secret
+from services.utils.types.main import SQSPayload
 
 
 def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str | None:
@@ -29,24 +31,23 @@ def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str | 
     return None
 
 
-def download_file_from_s3(s3_client: boto3.client, s3_url: str) -> bytes | None:
+def download_file_from_s3(
+    s3_client: boto3.client, sqs_payload: SQSPayload
+) -> bytes | None:
+    s3_key = sqs_payload.get("transcript_key", "")
+    bucket = get_secret("/alwayssaved/AWS_BUCKET")
+
     try:
-        parsed_url = urlparse(s3_url)
-        bucket = parsed_url.netloc.split(".")[
-            0
-        ]  # Gets 'my-bucket' from 'my-bucket.s3.us-west-2.amazonaws.com'
+        response = s3_client.get_object(Bucket=bucket, Key=s3_key)
 
-        key = unquote(
-            parsed_url.path.lstrip("/")
-        )  # Remove leading slash, then Decode %20, +, etc.
+        print(f"response from download_file_from_s3: {response} \n")
 
-        response = s3_client.get_object(Bucket=bucket, Key=key)
         return response["Body"].read()
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
-            print(f"s3_url {s3_url} does not exist! \n")
+            print(f"Object with key of {s3_key} does not exist! \n")
         elif e.response["Error"]["Code"] == "404":
-            print(f"s3_url {s3_url} does not exist! \n")
+            print(f"Object with key of {s3_key} does not exist! \n")
         else:
             print("An error occurred: ", e)
     return None

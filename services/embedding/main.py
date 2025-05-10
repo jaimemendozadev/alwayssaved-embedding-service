@@ -44,7 +44,7 @@ def embed_and_upload(
                 f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, or transcript_url: {transcript_url} \n"
             )
 
-        file_bytes = download_file_from_s3(s3_client, transcript_url)
+        file_bytes = download_file_from_s3(s3_client, sqs_payload)
 
         if file_bytes is None:
             raise ValueError(
