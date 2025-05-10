@@ -36,7 +36,7 @@ def run_service():
 
     # ✅ Validate Qdrant client and collection once before entering loop
     if qdrant_client is None:
-        print("❌ Qdrant client could not be instantiated. Exiting.")
+        print("❌ Qdrant client could not be instantiated in run_service. Exiting.")
         return
 
     create_qdrant_collection(qdrant_client)

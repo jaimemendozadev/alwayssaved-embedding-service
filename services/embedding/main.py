@@ -18,13 +18,21 @@ from services.utils.types.main import EmbedStatus, SQSPayload
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
 
 
+def get_base_error_feedback(
+    error_type: str,
+    note_id: str | None,
+    user_id: str | None,
+    transcript_bucket: str | None,
+    transcript_key: str | None,
+) -> str:
+    return f"❌ Unexpected {error_type} occurred for note_id={note_id}, user_id={user_id}, transcript_bucket={transcript_bucket}, transcript_key={transcript_key}"
+
+
 def embed_and_upload(
     sqs_payload: SQSPayload,
 ) -> EmbedStatus:
 
     try:
-        # TODO: Delete print statement.
-        print(f"Incoming sqs_payload in embed_and_upload: {sqs_payload}")
         aws_region = os.getenv("AWS_REGION", "us-east-1")
         s3_client = boto3.client("s3", region_name=aws_region)
 
@@ -48,7 +56,7 @@ def embed_and_upload(
             or transcript_key is None
         ):
             raise ValueError(
-                f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, transcript_bucket: {transcript_bucket}, or transcript_key: {transcript_key}"
+                "SQS Message Payload from Extractor Service is missing note_id, user_id, or transcript bucket/key value."
             )
 
         file_bytes = download_file_from_s3(s3_client, sqs_payload)
@@ -72,7 +80,6 @@ def embed_and_upload(
 
         chunks = chunk_text(full_text)
 
-        # NOTE: Do we need to add error handling for encoding chunks or upserting? 🤔
         vectors = embedding_model.encode(chunks, normalize_embeddings=True)
 
         points = []
@@ -98,25 +105,30 @@ def embed_and_upload(
         return handle_msg_feedback(sqs_payload, "complete")
 
     except TypeError as e:
-        print(
-            f"❌ Unexpected TypeError occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
+        feedback = get_base_error_feedback(
+            "TypeError", note_id, user_id, transcript_bucket, transcript_key
         )
+        print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
     except ValueError as e:
-        print(
-            f"❌ Unexpected ValueError occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
+        feedback = get_base_error_feedback(
+            "ValueError", note_id, user_id, transcript_bucket, transcript_key
         )
+        print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
+        return handle_msg_feedback(sqs_payload, "failed")
+
     except Exception as e:
-        print(
-            f"❌ Unexpected Exception occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
+        feedback = get_base_error_feedback(
+            "Exception", note_id, user_id, transcript_bucket, transcript_key
         )
+        print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")

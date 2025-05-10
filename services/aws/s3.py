@@ -5,7 +5,6 @@ import botocore
 import pdfplumber
 from bs4 import BeautifulSoup
 
-from services.aws.ssm import get_secret
 from services.utils.types.main import SQSPayload
 
 
@@ -26,7 +25,7 @@ def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str | 
             raise ValueError(f"Unsupported file extension: {file_extension}")
 
     except ValueError as e:
-        print(f"❌ Value Error: {e}")
+        print(f"❌ Value Error in extract_text_from_s3_bytes: {e}")
 
     return None
 
@@ -34,10 +33,14 @@ def extract_text_from_s3_bytes(file_bytes: bytes, file_extension: str) -> str | 
 def download_file_from_s3(
     s3_client: boto3.client, sqs_payload: SQSPayload
 ) -> bytes | None:
-    s3_key = sqs_payload.get("transcript_key", "")
-    bucket = get_secret("/alwayssaved/AWS_BUCKET")
 
     try:
+        s3_key = sqs_payload.get("transcript_key", None)
+        bucket = sqs_payload.get("transcript_bucket", None)
+
+        if s3_key is None or bucket is None:
+            return None
+
         response = s3_client.get_object(Bucket=bucket, Key=s3_key)
 
         print(f"response from download_file_from_s3: {response} \n")
