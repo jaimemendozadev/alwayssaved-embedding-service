@@ -84,7 +84,7 @@ def run_service():
 
             embedd_elapsed_time = embedd_end - embedd_start
             print(
-                f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time} \n"
+                f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time}"
             )
 
             successful_results = [
@@ -92,7 +92,7 @@ def run_service():
             ]
 
             print(
-                f"successfully process messages after embedding and uploading step: {successful_results} \n"
+                f"successfully process messages after embedding and uploading step: {successful_results}"
             )
 
             # 3) Delete Successfully Embedded/Uploaded Messages From SQS.

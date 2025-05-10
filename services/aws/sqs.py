@@ -87,7 +87,7 @@ def process_incoming_sqs_messages(
     return processed_list
 
 
-def delete_embedding_sqs_message(processed_success_list: List[EmbedStatus]):
+def delete_embedding_sqs_message(processed_success_list: List[EmbedStatus]) -> None:
 
     extractor_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
 
@@ -104,16 +104,16 @@ def delete_embedding_sqs_message(processed_success_list: List[EmbedStatus]):
             )
 
             print(
-                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['message_id']} \n"
+                f"✅ SQS Message Deleted from Extractor Push Queue: {msg['message_id']}"
             )
 
     except ClientError as e:
         print(
-            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']} \n"
+            f"❌ AWS Client Error deleting SQS message in delete_embedding_sqs_message: {e.response['Error']['Message']}"
         )
 
     except BotoCoreError as e:
-        print(f"❌ Boto3 Internal Error: {str(e)} \n")
+        print(f"❌ Boto3 Internal Error in delete_embedding_sqs_message: {str(e)}")
 
     except Exception as e:
-        print(f"❌ Unexpected Error: {str(e)} \n")
+        print(f"❌ Unexpected Error in delete_embedding_sqs_message: {str(e)}")
