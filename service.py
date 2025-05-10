@@ -97,7 +97,7 @@ def run_service():
 
             # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
             print(
-                "Start deleting successfully process messages from Embedding Push Queue. \n"
+                "Start deleting successfully process messages from Embedding Push Queue."
             )
             delete_embedding_sqs_message(successful_results)
 
