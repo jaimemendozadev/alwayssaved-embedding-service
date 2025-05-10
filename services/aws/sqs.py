@@ -32,23 +32,25 @@ def get_messages_from_extractor_service() -> Dict[str, Any]:
             VisibilityTimeout=VISIBILITY_TIMEOUT,
         )
 
+        # TODO: Delete print statement.
         print(
-            f"response from receive_message in get_messages_from_extractor_service: {response} \n"
+            f"Response from receive_message in get_messages_from_extractor_service: {response}"
         )
-        print("\n")
 
         return response
 
     except ClientError as e:
         print(
-            f"❌ AWS Client Error sending SQS message: {e.response['Error']['Message']} \n"
+            f"❌ AWS Client Error getting SQS message in get_messages_from_extractor_service: {e.response['Error']['Message']}"
         )
 
     except BotoCoreError as e:
-        print(f"❌ Boto3 Internal Error: {str(e)} \n")
+        print(
+            f"❌ Boto3 Internal Error in get_messages_from_extractor_service: {str(e)}"
+        )
 
     except ValueError as e:
-        print(f"❌ Unexpected Error: {str(e)} \n")
+        print(f"❌ Unexpected Error in get_messages_from_extractor_service: {str(e)}")
 
     return {}
 
@@ -69,16 +71,16 @@ def process_incoming_sqs_messages(
         processed_msg: SQSPayload = {
             "message_id": msg.get("MessageId", ""),
             "note_id": "",
-            "transcript_url": "",
-            "transcript_key": "",
             "user_id": "",
+            "transcript_bucket": "",
+            "transcript_key": "",
             "sqs_receipt_handle": msg.get("ReceiptHandle", ""),
         }
 
         processed_msg["note_id"] = payload_body.get("note_id", "")
-        processed_msg["transcript_key"] = payload_body.get("transcript_key", "")
-        processed_msg["transcript_url"] = payload_body.get("transcript_url", "")
         processed_msg["user_id"] = payload_body.get("user_id", "")
+        processed_msg["transcript_bucket"] = payload_body.get("transcript_bucket", "")
+        processed_msg["transcript_key"] = payload_body.get("transcript_key", "")
 
         processed_list.append(processed_msg)
 

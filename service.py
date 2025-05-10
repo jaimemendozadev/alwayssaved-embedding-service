@@ -52,26 +52,27 @@ def run_service():
         try:
 
             # 1) Get Extractor Queue Messages & Process.
-            print("Start Extracting and Processing Queue Messages. \n")
+            print("Start Extracting and Processing Queue Messages.")
             dequeue_start = time.time()
             sqs_payload = get_messages_from_extractor_service()
 
             sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
 
-            dequeue_end = time.time()
-            dequeue_elapsed_time = dequeue_end - dequeue_start
-            print(
-                f"Elapsed time for Extracting and Processing Queue Messages: {dequeue_elapsed_time} \n"
-            )
-
             if len(sqs_msg_list) == 0:
                 time.sleep(2)
                 continue
 
+            dequeue_end = time.time()
+            dequeue_elapsed_time = dequeue_end - dequeue_start
+            print(
+                f"Elapsed time for Extracting and Processing Queue Messages: {dequeue_elapsed_time}"
+            )
+
             # 2) Embedd & Upload Every Message to Qdrant Database.
-            print("Start Embedding and Uploading Messages to Qdrant Database. \n")
+            print("Start Embedding and Uploading Messages to Qdrant Database.")
             embedd_start = time.time()
 
+            # Need to stingify each dictionary to avoid executor Pickle issue.
             jsonified_inputs = [json.dumps(msg) for msg in sqs_msg_list]
 
             # TODO: Handle Message Loss Protection / Idempotency During Embedding
@@ -104,7 +105,7 @@ def run_service():
             #    Might have to be async with ThreadPoolExecutor
 
         except ValueError as e:
-            print(f"ValueError: {e}")
+            print(f"ValueError in run_service function: {e}")
             traceback.print_exc()
 
 
@@ -113,7 +114,7 @@ if __name__ == "__main__":
 
 # pylint: disable=W0105
 """
-Dev Notes 5/2/25:
+Dev Notes 5/10/25:
 
 - Decided to organize media uploads and call each upload a "Note".
 - If the Note is an .mp3 or .mp4, a Note is created for that file and it'll get uploaded on the Frontend to s3 at /{userID}/{noteID}/{fileName}.{fileExtension}
@@ -121,9 +122,9 @@ Dev Notes 5/2/25:
 - Incoming SQS Message has the following shape:
   {
     note_id: string;
-    transcript_url: string;
-    transcript_key: string;
     user_id: string;
+    transcript_bucket: string;
+    transcript_key: string; # media file name with .extension
   }
 
 

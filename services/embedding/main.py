@@ -23,7 +23,8 @@ def embed_and_upload(
 ) -> EmbedStatus:
 
     try:
-        print(f"Incoming sqs_payload in embed_and_upload: {sqs_payload} \n")
+        # TODO: Delete print statement.
+        print(f"Incoming sqs_payload in embed_and_upload: {sqs_payload}")
         aws_region = os.getenv("AWS_REGION", "us-east-1")
         s3_client = boto3.client("s3", region_name=aws_region)
 
@@ -32,26 +33,33 @@ def embed_and_upload(
 
         if embedding_model is None or qdrant_client is None or s3_client is None:
             raise ValueError(
-                "Can't process sqs_payload due to missing embedding model, qdrant client, or s3 client. \n"
+                "Can't process sqs_payload due to missing embedding model, qdrant client, or s3 client."
             )
 
         note_id = sqs_payload.get("note_id", None)
-        transcript_url = sqs_payload.get("transcript_url", None)
         user_id = sqs_payload.get("user_id", None)
+        transcript_bucket = sqs_payload.get("transcript_bucket", None)
+        transcript_key = sqs_payload.get("transcript_key", None)
 
-        if note_id is None or transcript_url is None or user_id is None:
+        if (
+            note_id is None
+            or user_id is None
+            or transcript_bucket is None
+            or transcript_key is None
+        ):
             raise ValueError(
-                f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, or transcript_url: {transcript_url} \n"
+                f"SQS Message Payload from Extractor Service is missing note_id: {note_id}, user_id: {user_id}, transcript_bucket: {transcript_bucket}, or transcript_key: {transcript_key}"
             )
 
         file_bytes = download_file_from_s3(s3_client, sqs_payload)
 
         if file_bytes is None:
             raise ValueError(
-                f"Could not get the requested s3 file: {transcript_url} \n"
+                f"Could not get the requested s3 file with key of: {transcript_key}"
             )
 
-        _, file_extension = os.path.splitext(transcript_url)
+        # transcript_key is media file name with .extension
+        _, file_extension = os.path.splitext(transcript_key)
 
         file_extension = file_extension.lower()
 
@@ -59,7 +67,7 @@ def embed_and_upload(
 
         if full_text is None:
             raise ValueError(
-                f"Could not extract text from downloaded s3 file: {transcript_url} \n"
+                f"Could not extract text from downloaded s3 file with key of: {transcript_key}"
             )
 
         chunks = chunk_text(full_text)
@@ -77,7 +85,8 @@ def embed_and_upload(
                     payload={
                         "_id": str(note_id),
                         "user_id": user_id,
-                        "source_transcript_url": transcript_url,
+                        "source_transcript_key": transcript_key,
+                        "source_transcript_bucket": transcript_bucket,
                         "original_chunk_text": chunked_text,
                     },
                 )
@@ -90,7 +99,7 @@ def embed_and_upload(
 
     except TypeError as e:
         print(
-            f"❌ Unexpected TypeError occurred for note_id={note_id}, user_id={user_id}: {e}"
+            f"❌ Unexpected TypeError occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
         )
         traceback.print_exc()
 
@@ -98,7 +107,7 @@ def embed_and_upload(
 
     except ValueError as e:
         print(
-            f"❌ Unexpected ValueError occurred for note_id={note_id}, user_id={user_id}: {e}"
+            f"❌ Unexpected ValueError occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
         )
         traceback.print_exc()
 
@@ -106,7 +115,7 @@ def embed_and_upload(
 
     except Exception as e:
         print(
-            f"❌ Unexpected Exception occurred for note_id={note_id}, user_id={user_id}: {e}"
+            f"❌ Unexpected Exception occurred for note_id={note_id}, user_id={user_id} in embed_and_upload: {e}"
         )
         traceback.print_exc()
 

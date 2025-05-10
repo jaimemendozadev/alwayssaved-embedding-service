@@ -16,7 +16,9 @@ def create_qdrant_collection(q_client: QdrantClient) -> None:
         q_client.get_collection(collection_name=QDRANT_COLLECTION_NAME)
 
     except UnexpectedResponse as e:
-        print(f"❌ QdrantClient UnexpectedResponse Error: {e}\n")
+        print(
+            f"❌ QdrantClient UnexpectedResponse Error in create_qdrant_collection: {e}"
+        )
 
         q_client.create_collection(
             collection_name=QDRANT_COLLECTION_NAME,
@@ -40,7 +42,7 @@ def get_qdrant_client() -> QdrantClient | None:
         return qdrant
 
     except ValueError as e:
-        print(f"❌ Value Error: {e}")
+        print(f"❌ Value Error in get_qdrant_client: {e}")
         return None
 
 
@@ -50,6 +52,6 @@ def get_qdrant_collection(q_client: QdrantClient) -> CollectionInfo | None:
         return q_client.get_collection(collection_name=QDRANT_COLLECTION_NAME)
 
     except UnexpectedResponse as e:
-        print(f"❌ QdrantClient UnexpectedResponse Error: {e}\n")
+        print(f"❌ QdrantClient UnexpectedResponse Error in get_qdrant_collection: {e}")
 
     return None
