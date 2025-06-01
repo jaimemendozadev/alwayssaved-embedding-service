@@ -12,7 +12,6 @@ def handle_msg_feedback(
     message_id = sqs_payload.get("message_id", "")
     note_id = sqs_payload.get("note_id", "")
     user_id = sqs_payload.get("user_id", "")
-    transcript_bucket = sqs_payload.get("transcript_bucket", "")
     transcript_key = sqs_payload.get("transcript_key", "")
     sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")
 
@@ -20,7 +19,6 @@ def handle_msg_feedback(
         "message_id": message_id,
         "note_id": note_id,
         "user_id": user_id,
-        "transcript_bucket": transcript_bucket,
         "transcript_key": transcript_key,
         "sqs_receipt_handle": sqs_receipt_handle,
         "process_status": process_result,

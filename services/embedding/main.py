@@ -34,6 +34,7 @@ def embed_and_upload(
 
     try:
         aws_region = os.getenv("AWS_REGION", "us-east-1")
+        transcript_bucket = os.getenv("AWS_BUCKET", "alwayssaved")
         s3_client = boto3.client("s3", region_name=aws_region)
 
         embedding_model: SentenceTransformer = get_embedd_model()
@@ -46,7 +47,6 @@ def embed_and_upload(
 
         note_id = sqs_payload.get("note_id", None)
         user_id = sqs_payload.get("user_id", None)
-        transcript_bucket = sqs_payload.get("transcript_bucket", None)
         transcript_key = sqs_payload.get("transcript_key", None)
 
         if (
@@ -119,8 +119,6 @@ def embed_and_upload(
         )
         print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
-
-        return handle_msg_feedback(sqs_payload, "failed")
 
         return handle_msg_feedback(sqs_payload, "failed")
 

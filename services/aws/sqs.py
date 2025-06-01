@@ -72,14 +72,12 @@ def process_incoming_sqs_messages(
             "message_id": msg.get("MessageId", ""),
             "note_id": "",
             "user_id": "",
-            "transcript_bucket": "",
             "transcript_key": "",
             "sqs_receipt_handle": msg.get("ReceiptHandle", ""),
         }
 
         processed_msg["note_id"] = payload_body.get("note_id", "")
         processed_msg["user_id"] = payload_body.get("user_id", "")
-        processed_msg["transcript_bucket"] = payload_body.get("transcript_bucket", "")
         processed_msg["transcript_key"] = payload_body.get("transcript_key", "")
 
         processed_list.append(processed_msg)
