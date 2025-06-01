@@ -3,9 +3,12 @@ import os
 import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor
+from typing import TYPE_CHECKING
 
+import boto3
 from dotenv import load_dotenv
 
+from services.aws.ses import send_user_email_notification
 from services.aws.sqs import (
     delete_embedding_sqs_message,
     get_messages_from_extractor_service,
@@ -26,6 +29,13 @@ PYTHON_MODE = os.getenv("PYTHON_MODE", "production")
 
 
 qdrant_client = get_qdrant_client()
+
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
+if TYPE_CHECKING:
+    from mypy_boto3_ses import SESClient
+
+ses_client: "SESClient" = boto3.client("ses", region_name=AWS_REGION)  # Use your region
 
 
 def executor_worker(json_payload: str):
@@ -108,6 +118,7 @@ def run_service():
             delete_embedding_sqs_message(successful_results)
 
             # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
+            send_user_email_notification(ses_client, "hello")
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")

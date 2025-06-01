@@ -21,6 +21,7 @@ black = "*"
 flake8 = "*"
 mypy = "*"
 ruff = "*"
+mypy-boto3-ses = "*"
 
 [requires]
 python_version = "3.11"

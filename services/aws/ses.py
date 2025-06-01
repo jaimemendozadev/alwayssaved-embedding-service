@@ -1,17 +1,18 @@
 import os
+from typing import TYPE_CHECKING
 
-import boto3
-
-ses = boto3.client("ses", region_name="us-east-1")  # Use your region
-
+if TYPE_CHECKING:
+    from mypy_boto3_ses import SESClient
 
 sender = os.getenv("AWS_SES_SENDER_EMAIL", "")
 subject = "Your media file has been processed! 🥳"
 body_text = "We've finished processing your media file and you're now ready to ask it questions against the LLM. Happy querying! 🎉🙌🏽"
 
 
-def send_user_email_notification(user_email: str):
-    response = ses.send_email(
+async def send_user_email_notification(
+    ses_client: "SESClient", user_email: str
+) -> None:
+    response = await ses_client.send_email(
         Source=sender,
         Destination={
             "ToAddresses": [user_email],
