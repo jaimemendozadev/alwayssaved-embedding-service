@@ -17,6 +17,7 @@ from services.qdrant.main import (
     get_qdrant_client,
     get_qdrant_collection,
 )
+from services.utils.mongodb.main import create_mongodb_instance
 
 load_dotenv()
 
@@ -49,7 +50,12 @@ def run_service():
 
     while True:
 
+        mongo_client = create_mongodb_instance()
+
         try:
+
+            if mongo_client is None:
+                continue
 
             # 1) Get Extractor Queue Messages & Process.
             print("Start Extracting and Processing Queue Messages.")
@@ -102,7 +108,6 @@ def run_service():
             delete_embedding_sqs_message(successful_results)
 
             # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
-            #    Might have to be async with ThreadPoolExecutor
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")

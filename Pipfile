@@ -11,8 +11,8 @@ sentence-transformers = "*"
 uuid = "*"
 pdfplumber = "*"
 beautifulsoup4 = "*"
-pymongo = "*"
 torch = "*"
+pymongo = "*"
 
 [dev-packages]
 pre-commit = "*"
