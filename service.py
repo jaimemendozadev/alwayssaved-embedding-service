@@ -2,7 +2,7 @@ import json
 import os
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from typing import TYPE_CHECKING
 
 import boto3
@@ -21,6 +21,7 @@ from services.qdrant.main import (
     get_qdrant_collection,
 )
 from services.utils.mongodb.main import create_mongodb_instance
+from services.utils.types.main import EmbedStatus
 
 load_dotenv()
 
@@ -35,12 +36,19 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 if TYPE_CHECKING:
     from mypy_boto3_ses import SESClient
 
-ses_client: "SESClient" = boto3.client("ses", region_name=AWS_REGION)  # Use your region
+ses_client: "SESClient" = boto3.client("ses", region_name=AWS_REGION)
+
+mongo_client = create_mongodb_instance()
 
 
 def executor_worker(json_payload: str):
     payload_dict = json.loads(json_payload)
     return embed_and_upload(payload_dict)
+
+
+async def thread_executor_worker(embed_status: EmbedStatus):
+    user_id = embed_status["user_id"]
+    await send_user_email_notification(ses_client, mongo_client, user_id)
 
 
 def run_service():
@@ -59,8 +67,6 @@ def run_service():
         return
 
     while True:
-
-        mongo_client = create_mongodb_instance()
 
         try:
 
@@ -117,8 +123,9 @@ def run_service():
             )
             delete_embedding_sqs_message(successful_results)
 
-            # 4) TODO: Fire an SES Email For Each Successful Embedd/Upload Message.
-            send_user_email_notification(ses_client, "hello")
+            # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
+            with ThreadPoolExecutor as executor:
+                list(executor.map(thread_executor_worker, successful_results))
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
