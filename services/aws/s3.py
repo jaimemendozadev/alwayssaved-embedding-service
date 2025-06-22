@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 import boto3
@@ -36,7 +37,7 @@ def download_file_from_s3(
 
     try:
         s3_key = sqs_payload.get("transcript_key", None)
-        bucket = sqs_payload.get("transcript_bucket", None)
+        bucket = os.getenv("AWS_BUCKET", "alwayssaved")
 
         if s3_key is None or bucket is None:
             return None
