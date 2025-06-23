@@ -3,7 +3,7 @@ import json
 import os
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from typing import TYPE_CHECKING
 
 import boto3
@@ -125,8 +125,8 @@ def run_service():
             delete_embedding_sqs_message(successful_results)
 
             # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-            # with ThreadPoolExecutor() as executor:
-            #     list(executor.map(thread_executor_worker, successful_results))
+            with ThreadPoolExecutor() as executor:
+                list(executor.map(thread_executor_worker, successful_results))
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
