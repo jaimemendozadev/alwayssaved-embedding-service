@@ -1,6 +1,7 @@
 import os
 from typing import TYPE_CHECKING
 
+from botocore.exceptions import BotoCoreError, ParamValidationError
 from bson.objectid import ObjectId
 from pymongo import AsyncMongoClient
 
@@ -18,33 +19,49 @@ async def send_user_email_notification(
 
     print(f"user_id in send_user_email_notification: {user_id}")
 
-    found_user = (
-        await mongo_client.get_database("alwayssaved")
-        .get_collection("users")
-        .find_one({"_id": ObjectId(user_id)})
-    )
+    try:
+        found_user = (
+            await mongo_client.get_database("alwayssaved")
+            .get_collection("users")
+            .find_one({"_id": ObjectId(user_id)})
+        )
+        print(f"found_user in send_user_email_notification: {found_user}")
 
-    print(f"found_user in send_user_email_notification: {found_user}")
+        if found_user is None:
+            raise ValueError(
+                f"User with id of {user_id} not found in database. Can't send a transcription notification email."
+            )
 
-    email = found_user
+        email = found_user["email"]
 
-    response = await ses_client.send_email(
-        Source=sender,
-        Destination={
-            "ToAddresses": [email],
-        },
-        Message={
-            "Subject": {
-                "Data": SUBJECT,
+        response = await ses_client.send_email(
+            Source=sender,
+            Destination={
+                "ToAddresses": [email],
             },
-            "Body": {
-                "Text": {
-                    "Data": BODY_TEXT,
+            Message={
+                "Subject": {
+                    "Data": SUBJECT,
+                },
+                "Body": {
+                    "Text": {
+                        "Data": BODY_TEXT,
+                    },
                 },
             },
-        },
-    )
+        )
+        print(f"response in send_user_email_notification: {response}")
+        print(f"Email sent to {email}! Message ID:", response["MessageId"])
 
-    print(f"response in send_user_email_notification: {response}")
+    except (ParamValidationError, BotoCoreError) as e:
+        print(f"❌ SES error ({type(e).__name__}): {str(e)} — user_id: {user_id}")
 
-    print(f"Email sent to {email}! Message ID:", response["MessageId"])
+    except ValueError as e:
+        print(
+            f"❌ Unexpected ValueError in send_user_email_notification for user_id {user_id}: {str(e)}"
+        )
+
+    except Exception as e:
+        print(
+            f"❌ Unexpected Exception in send_user_email_notification for user_id {user_id}: {str(e)}"
+        )
