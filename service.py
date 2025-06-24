@@ -3,7 +3,7 @@ import json
 import os
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING
 
 import boto3
@@ -22,7 +22,6 @@ from services.qdrant.main import (
     get_qdrant_collection,
 )
 from services.utils.mongodb.main import create_mongodb_instance
-from services.utils.types.main import EmbedStatus
 
 load_dotenv()
 
@@ -47,12 +46,15 @@ def executor_worker(json_payload: str):
     return embed_and_upload(payload_dict)
 
 
-def thread_executor_worker(embed_status: EmbedStatus):
-    user_id = embed_status["user_id"]
-    asyncio.run(send_user_email_notification(ses_client, mongo_client, user_id))
+async def process_successful_results(successful_results):
+    tasks = [
+        send_user_email_notification(ses_client, mongo_client, result["user_id"])
+        for result in successful_results
+    ]
+    await asyncio.gather(*tasks)
 
 
-def run_service():
+async def run_service():
 
     # ✅ Validate Qdrant client and collection once before entering loop
     if qdrant_client is None:
@@ -125,8 +127,7 @@ def run_service():
             delete_embedding_sqs_message(successful_results)
 
             # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-            with ThreadPoolExecutor() as executor:
-                list(executor.map(thread_executor_worker, successful_results))
+            # await process_successful_results(successful_results)
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
@@ -134,7 +135,7 @@ def run_service():
 
 
 if __name__ == "__main__":
-    run_service()
+    asyncio.run(run_service())
 
 # pylint: disable=W0105
 """

@@ -8,7 +8,7 @@ from pymongo import AsyncMongoClient
 if TYPE_CHECKING:
     from mypy_boto3_ses import SESClient
 
-sender = os.getenv("AWS_SES_SENDER_EMAIL", "")
+sender = os.getenv("AWS_SES_SENDER_EMAIL", "").strip()
 SUBJECT = "Your media file has been processed! 🥳"
 BODY_TEXT = "We've finished processing your media file and you're now ready to ask it questions against the LLM. Happy querying! 🎉🙌🏽"
 
@@ -32,7 +32,14 @@ async def send_user_email_notification(
                 f"User with id of {user_id} not found in database. Can't send a transcription notification email."
             )
 
-        email = found_user["email"]
+        email = found_user.get("email", "").strip()
+
+        print(f"plucked email from found_user {email}")
+
+        if not email:
+            raise ValueError(
+                f"User with id of {user_id} has no email. Can't send a transcription notification email."
+            )
 
         response = await ses_client.send_email(
             Source=sender,
