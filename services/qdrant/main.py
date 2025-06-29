@@ -7,7 +7,7 @@ from qdrant_client.http.models import Distance, VectorParams
 
 from services.aws.ssm import get_secret
 
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "alwayssaved_user_files")
 
 
 def create_qdrant_collection(q_client: QdrantClient) -> None:

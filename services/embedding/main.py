@@ -15,7 +15,7 @@ from services.embedding.utils.main import (
 from services.qdrant.main import get_qdrant_client
 from services.utils.types.main import EmbedStatus, SQSPayload
 
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "user_files")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "alwayssaved_user_files")
 
 
 def get_base_error_feedback(
