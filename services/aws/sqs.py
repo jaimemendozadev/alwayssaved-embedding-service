@@ -70,15 +70,17 @@ def process_incoming_sqs_messages(
 
         processed_msg: SQSPayload = {
             "message_id": msg.get("MessageId", ""),
+            "file_id": "",
             "note_id": "",
             "user_id": "",
-            "transcript_key": "",
+            "transcript_s3_key": "",
             "sqs_receipt_handle": msg.get("ReceiptHandle", ""),
         }
 
+        processed_msg["file_id"] = payload_body.get("file_id", "")
         processed_msg["note_id"] = payload_body.get("note_id", "")
         processed_msg["user_id"] = payload_body.get("user_id", "")
-        processed_msg["transcript_key"] = payload_body.get("transcript_key", "")
+        processed_msg["transcript_s3_key"] = payload_body.get("transcript_s3_key", "")
 
         processed_list.append(processed_msg)
 

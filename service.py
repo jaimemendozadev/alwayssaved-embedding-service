@@ -69,12 +69,13 @@ async def run_service():
         print("❌ Qdrant collection not found and could not be created. Exiting.")
         return
 
+    if mongo_client is None:
+        print("❌ MongoDB could not be instantiated in run_service. Exiting.")
+        return
+
     while True:
 
         try:
-
-            if mongo_client is None:
-                continue
 
             # 1) Get Extractor Queue Messages & Process.
             print("Start Extracting and Processing Queue Messages.")
@@ -126,8 +127,9 @@ async def run_service():
             )
             delete_embedding_sqs_message(successful_results)
 
+            # TODO: Resolve pending SES Production mailbox issue.
             # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-            await process_successful_results(successful_results)
+            # await process_successful_results(successful_results)
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
@@ -146,10 +148,12 @@ Notes:
 - When SQS messages arrives in Extractor service, will transcribe and upload the transcript to s3 at /{userID}/{noteID}/{fileName}.txt
 - Incoming SQS Message has the following shape:
 
+
   {
       note_id: string;
+      file_id: string;
       user_id: string;
-      transcript_key: string; # media file name with .extension
+      transcript_s3_key: string; # media file name with .extension
   }
 
 

@@ -5,7 +5,8 @@ class SQSPayload(TypedDict):
     message_id: str
     note_id: str
     user_id: str
-    transcript_key: str
+    file_id: str
+    transcript_s3_key: str
     sqs_receipt_handle: str
 
 

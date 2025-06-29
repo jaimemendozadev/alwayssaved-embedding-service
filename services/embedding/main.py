@@ -45,29 +45,31 @@ def embed_and_upload(
                 "Can't process sqs_payload due to missing embedding model, qdrant client, or s3 client."
             )
 
+        file_id = sqs_payload.get("file_id", None)
         note_id = sqs_payload.get("note_id", None)
         user_id = sqs_payload.get("user_id", None)
-        transcript_key = sqs_payload.get("transcript_key", None)
+        transcript_s3_key = sqs_payload.get("transcript_s3_key", None)
 
         if (
-            note_id is None
+            file_id is None
+            or note_id is None
             or user_id is None
             or transcript_bucket is None
-            or transcript_key is None
+            or transcript_s3_key is None
         ):
             raise ValueError(
-                "SQS Message Payload from Extractor Service is missing note_id, user_id, or transcript bucket/key value."
+                "SQS Message Payload from Extractor Service is missing file_id, note_id, user_id, or transcript_s3_key value."
             )
 
         file_bytes = download_file_from_s3(s3_client, sqs_payload)
 
         if file_bytes is None:
             raise ValueError(
-                f"Could not get the requested s3 file with key of: {transcript_key}"
+                f"Could not get the requested s3 file with key of: {transcript_s3_key}"
             )
 
         # transcript_key is media file name with .extension
-        _, file_extension = os.path.splitext(transcript_key)
+        _, file_extension = os.path.splitext(transcript_s3_key)
 
         file_extension = file_extension.lower()
 
@@ -75,7 +77,7 @@ def embed_and_upload(
 
         if full_text is None:
             raise ValueError(
-                f"Could not extract text from downloaded s3 file with key of: {transcript_key}"
+                f"Could not extract text from downloaded s3 file with key of: {transcript_s3_key}"
             )
 
         chunks = chunk_text(full_text)
@@ -90,10 +92,10 @@ def embed_and_upload(
                     id=str(uuid.uuid4()),  # unique ID per chunk
                     vector=vector.tolist(),
                     payload={
-                        "_id": str(note_id),
+                        "note_id": note_id,
+                        "file_id": file_id,
                         "user_id": user_id,
-                        "source_transcript_key": transcript_key,
-                        "source_transcript_bucket": transcript_bucket,
+                        "s3_key": transcript_s3_key,
                         "original_chunk_text": chunked_text,
                     },
                 )
@@ -106,7 +108,7 @@ def embed_and_upload(
 
     except TypeError as e:
         feedback = get_base_error_feedback(
-            "TypeError", note_id, user_id, transcript_bucket, transcript_key
+            "TypeError", note_id, user_id, transcript_bucket, transcript_s3_key
         )
         print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
@@ -115,7 +117,7 @@ def embed_and_upload(
 
     except ValueError as e:
         feedback = get_base_error_feedback(
-            "ValueError", note_id, user_id, transcript_bucket, transcript_key
+            "ValueError", note_id, user_id, transcript_bucket, transcript_s3_key
         )
         print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
@@ -124,7 +126,7 @@ def embed_and_upload(
 
     except Exception as e:
         feedback = get_base_error_feedback(
-            "Exception", note_id, user_id, transcript_bucket, transcript_key
+            "Exception", note_id, user_id, transcript_bucket, transcript_s3_key
         )
         print(f"{feedback} in embed_and_upload: {e}")
         traceback.print_exc()
