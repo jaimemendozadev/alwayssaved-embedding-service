@@ -127,7 +127,7 @@ async def run_service():
             delete_embedding_sqs_message(successful_results)
 
             # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-            # await process_successful_results(successful_results)
+            await process_successful_results(successful_results)
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
