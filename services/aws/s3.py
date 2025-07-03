@@ -36,8 +36,17 @@ def download_file_from_s3(
 ) -> bytes | None:
 
     try:
+        print(f"sqs_payload in download_file_from_s3: {sqs_payload}")
+
+        print(f"s3_client in download_file_from_s3 {s3_client}")
+
         s3_key = sqs_payload.get("transcript_s3_key", None)
+
+        print(f"s3_key in download_file_from_s3 {s3_key}")
+
         bucket = os.getenv("AWS_BUCKET", "alwayssaved")
+
+        print(f"bucket in download_file_from_s3 {bucket}")
 
         if s3_key is None or bucket is None:
             return None
