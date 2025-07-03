@@ -109,7 +109,6 @@ async def run_service():
             # Need to stingify each dictionary to avoid executor Pickle issue.
             jsonified_inputs = [json.dumps(msg) for msg in sqs_msg_list]
 
-            # TODO: Handle Message Loss Protection / Idempotency During Embedding
             # Ensures Fresh Worker Processes Each Batch
             with ProcessPoolExecutor() as executor:
                 raw_results = list(executor.map(executor_worker, jsonified_inputs))

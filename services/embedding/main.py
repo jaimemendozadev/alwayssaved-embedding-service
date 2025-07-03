@@ -33,6 +33,7 @@ def embed_and_upload(
 ) -> EmbedStatus:
 
     try:
+        message_id = sqs_payload.get("message_id", "")
         aws_region = os.getenv("AWS_REGION", "us-east-1")
         transcript_bucket = os.getenv("AWS_BUCKET", "alwayssaved")
         s3_client = boto3.client("s3", region_name=aws_region)
@@ -42,7 +43,7 @@ def embed_and_upload(
 
         if embedding_model is None or qdrant_client is None or s3_client is None:
             raise ValueError(
-                "Can't process sqs_payload due to missing embedding model, qdrant client, or s3 client."
+                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to missing embedding model, qdrant client, or s3 client."
             )
 
         file_id = sqs_payload.get("file_id", None)
@@ -58,14 +59,14 @@ def embed_and_upload(
             or transcript_s3_key is None
         ):
             raise ValueError(
-                "SQS Message Payload from Extractor Service is missing file_id, note_id, user_id, or transcript_s3_key value."
+                "❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to missing file_id, note_id, user_id, or transcript_s3_key value in payload."
             )
 
         file_bytes = download_file_from_s3(s3_client, sqs_payload)
 
         if file_bytes is None:
             raise ValueError(
-                f"Could not get the requested s3 file with key of: {transcript_s3_key}"
+                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to inability to fetch requested s3 file with key of: {transcript_s3_key}"
             )
 
         # transcript_key is media file name with .extension
@@ -77,7 +78,7 @@ def embed_and_upload(
 
         if full_text is None:
             raise ValueError(
-                f"Could not extract text from downloaded s3 file with key of: {transcript_s3_key}"
+                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to inability to extract text from downloaded s3 file with key of: {transcript_s3_key}"
             )
 
         chunks = chunk_text(full_text)
