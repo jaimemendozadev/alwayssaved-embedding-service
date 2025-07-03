@@ -36,7 +36,7 @@ def download_file_from_s3(
 ) -> bytes | None:
 
     try:
-        s3_key = sqs_payload.get("transcript_key", None)
+        s3_key = sqs_payload.get("transcript_s3_key", None)
         bucket = os.getenv("AWS_BUCKET", "alwayssaved")
 
         if s3_key is None or bucket is None:

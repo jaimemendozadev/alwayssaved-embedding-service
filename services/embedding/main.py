@@ -23,9 +23,9 @@ def get_base_error_feedback(
     note_id: str | None,
     user_id: str | None,
     transcript_bucket: str | None,
-    transcript_key: str | None,
+    transcript_s3_key: str | None,
 ) -> str:
-    return f"❌ Unexpected {error_type} occurred for note_id={note_id}, user_id={user_id}, transcript_bucket={transcript_bucket}, transcript_key={transcript_key}"
+    return f"❌ Unexpected {error_type} occurred for note_id={note_id}, user_id={user_id}, transcript_bucket={transcript_bucket}, transcript_s3_key={transcript_s3_key}"
 
 
 def embed_and_upload(
