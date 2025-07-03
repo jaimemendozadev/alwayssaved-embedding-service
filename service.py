@@ -124,19 +124,22 @@ async def run_service():
                 res for res in raw_results if res.get("process_status") == "complete"
             ]
 
-            print(
-                f"successfully process messages after embedding and uploading step: {successful_results}"
-            )
-
             # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
-            print(
-                "Start deleting successfully process messages from Embedding Push Queue."
-            )
-            delete_embedding_sqs_message(successful_results)
+            if len(successful_results) == 0:
+                # Transcription embedding failed -> Don't delete -> Let SQS redrive.
+                for failed_result in raw_results:
+                    print(
+                        f"❌ Transcript embedding failed for sqs_payload with message_id of {failed_result.get('message_id')} — skipping deletion."
+                    )
 
-            # TODO: Resolve pending SES Production mailbox issue.
-            # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-            # await process_successful_results(successful_results)
+            else:
+                print(
+                    "Start deleting successfully process messages from Embedding Push Queue."
+                )
+                delete_embedding_sqs_message(successful_results)
+
+                # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
+                # await process_successful_results(successful_results)
 
         except ValueError as e:
             print(f"ValueError in run_service function: {e}")
@@ -168,4 +171,7 @@ Notes:
 {
 
 }
+
+TODO:
+  - Resolve pending SES Production mailbox issue.
 """

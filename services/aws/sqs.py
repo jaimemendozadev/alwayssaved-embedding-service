@@ -32,11 +32,6 @@ def get_messages_from_extractor_service() -> Dict[str, Any]:
             VisibilityTimeout=VISIBILITY_TIMEOUT,
         )
 
-        # TODO: Delete print statement.
-        print(
-            f"Response from receive_message in get_messages_from_extractor_service: {response}"
-        )
-
         return response
 
     except ClientError as e:
