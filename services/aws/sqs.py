@@ -11,7 +11,7 @@ from services.utils.types.main import EmbedStatus, SQSPayload
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 sqs_client = boto3.client("sqs", region_name=AWS_REGION)
 
-MAX_MESSAGES = 10
+MAX_MESSAGES = 1
 WAIT_TIME = 20
 VISIBILITY_TIMEOUT = 2700
 

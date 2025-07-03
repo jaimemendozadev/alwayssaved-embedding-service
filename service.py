@@ -58,7 +58,9 @@ async def run_service():
 
     # ✅ Validate Qdrant client and collection once before entering loop
     if qdrant_client is None:
-        print("❌ Qdrant client could not be instantiated in run_service. Exiting.")
+        print(
+            "❌ App fails preliminary first check where Qdrant client could not be instantiated in run_service. Exiting."
+        )
         return
 
     create_qdrant_collection(qdrant_client)
@@ -66,11 +68,15 @@ async def run_service():
     collection_info = get_qdrant_collection(qdrant_client)
 
     if collection_info is None:
-        print("❌ Qdrant collection not found and could not be created. Exiting.")
+        print(
+            "❌ App fails preliminary second check where Qdrant collection not found and could not be created. Exiting."
+        )
         return
 
     if mongo_client is None:
-        print("❌ MongoDB could not be instantiated in run_service. Exiting.")
+        print(
+            "❌ ❌ App fails final preliminary check where the MongoDB client could not be instantiated. Exiting."
+        )
         return
 
     while True:
@@ -80,6 +86,8 @@ async def run_service():
             # 1) Get Extractor Queue Messages & Process.
             print("Start Extracting and Processing Queue Messages.")
             dequeue_start = time.time()
+
+            # For MVP, will only dequee one SQS message at a time.
             sqs_payload = get_messages_from_extractor_service()
 
             sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
