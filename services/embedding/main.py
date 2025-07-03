@@ -20,20 +20,19 @@ QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "alwayssaved_user_f
 
 def get_base_error_feedback(
     error_type: str,
-    note_id: str | None,
-    user_id: str | None,
-    transcript_bucket: str | None,
+    message_id: str,
     transcript_s3_key: str | None,
 ) -> str:
-    return f"❌ Unexpected {error_type} occurred for note_id={note_id}, user_id={user_id}, transcript_bucket={transcript_bucket}, transcript_s3_key={transcript_s3_key}"
+    return f"❌ Unexpected {error_type} occurred for sqs_payload with message_id={message_id} and transcript_s3_key={transcript_s3_key}"
 
 
 def embed_and_upload(
     sqs_payload: SQSPayload,
 ) -> EmbedStatus:
 
+    message_id = sqs_payload.get("message_id", "")
+
     try:
-        message_id = sqs_payload.get("message_id", "")
         aws_region = os.getenv("AWS_REGION", "us-east-1")
         transcript_bucket = os.getenv("AWS_BUCKET", "alwayssaved")
         s3_client = boto3.client("s3", region_name=aws_region)
@@ -43,7 +42,7 @@ def embed_and_upload(
 
         if embedding_model is None or qdrant_client is None or s3_client is None:
             raise ValueError(
-                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to missing embedding model, qdrant client, or s3 client."
+                "❌ Error in embed_and_upload due to missing embedding model, qdrant client, or s3_client."
             )
 
         file_id = sqs_payload.get("file_id", None)
@@ -59,14 +58,14 @@ def embed_and_upload(
             or transcript_s3_key is None
         ):
             raise ValueError(
-                "❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to missing file_id, note_id, user_id, or transcript_s3_key value in payload."
+                "❌ Error in embed_and_upload due to missing file_id, note_id, user_id, or transcript_s3_key value in payload."
             )
 
         file_bytes = download_file_from_s3(s3_client, sqs_payload)
 
         if file_bytes is None:
             raise ValueError(
-                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to inability to fetch requested s3 file with key of: {transcript_s3_key}"
+                "❌ Error in embed_and_upload due to inability to fetch requested s3 file with given s3_key."
             )
 
         # transcript_key is media file name with .extension
@@ -78,7 +77,7 @@ def embed_and_upload(
 
         if full_text is None:
             raise ValueError(
-                f"❌ Can't process sqs_payload with message_id {message_id} in embed_and_upload due to inability to extract text from downloaded s3 file with key of: {transcript_s3_key}"
+                "❌ Error in embed_and_upload due to inability to extract text from downloaded s3 file."
             )
 
         chunks = chunk_text(full_text)
@@ -108,28 +107,22 @@ def embed_and_upload(
         return handle_msg_feedback(sqs_payload, "complete")
 
     except TypeError as e:
-        feedback = get_base_error_feedback(
-            "TypeError", note_id, user_id, transcript_bucket, transcript_s3_key
-        )
-        print(f"{feedback} in embed_and_upload: {e}")
+        feedback = get_base_error_feedback("TypeError", message_id, transcript_s3_key)
+        print(f"{feedback}: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
     except ValueError as e:
-        feedback = get_base_error_feedback(
-            "ValueError", note_id, user_id, transcript_bucket, transcript_s3_key
-        )
-        print(f"{feedback} in embed_and_upload: {e}")
+        feedback = get_base_error_feedback("ValueError", message_id, transcript_s3_key)
+        print(f"{feedback}: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
 
     except Exception as e:
-        feedback = get_base_error_feedback(
-            "Exception", note_id, user_id, transcript_bucket, transcript_s3_key
-        )
-        print(f"{feedback} in embed_and_upload: {e}")
+        feedback = get_base_error_feedback("Exception", message_id, transcript_s3_key)
+        print(f"{feedback}: {e}")
         traceback.print_exc()
 
         return handle_msg_feedback(sqs_payload, "failed")
