@@ -27,7 +27,7 @@ def get_messages_from_extractor_service() -> Dict[str, Any]:
 
         response = sqs_client.receive_message(
             QueueUrl=embedding_push_queue_url,
-            MaxNumberOfMessages=MAX_MESSAGES,  # You can adjust this to batch process more users
+            MaxNumberOfMessages=MAX_MESSAGES,  # Adjust this to batch process more users
             WaitTimeSeconds=WAIT_TIME,  # Long polling to reduce API calls
             VisibilityTimeout=VISIBILITY_TIMEOUT,
         )

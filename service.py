@@ -152,12 +152,7 @@ if __name__ == "__main__":
 # pylint: disable=W0105
 """
 Notes:
-
-- Decided to organize media uploads and call each upload a "Note".
-- If the Note is an .mp3 or .mp4, a Note is created for that file and it'll get uploaded on the Frontend to s3 at /{userID}/{noteID}/{fileName}.{fileExtension}
-- When SQS messages arrives in Extractor service, will transcribe and upload the transcript to s3 at /{userID}/{noteID}/{fileName}.txt
 - Incoming SQS Message has the following shape:
-
 
   {
       note_id: string;
@@ -165,13 +160,4 @@ Notes:
       user_id: string;
       transcript_s3_key: string; # media file name with .extension
   }
-
-
-- Outgoing SQS Message has the following shape (may get redone):
-{
-
-}
-
-TODO:
-  - Resolve pending SES Production mailbox issue.
 """
