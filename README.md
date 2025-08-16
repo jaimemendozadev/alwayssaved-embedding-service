@@ -23,7 +23,7 @@ For more information about What is AlwaysSaved and its Key Features, refer to th
 
 ## 3rd Party Services Needed
 
-As a friendly reminder from the [AlwaysSaved Extractor Service](#https://github.com/jaimemendozadev/alwayssaved-extractor-service), the following AWS Resource should have already been setup for this `Embedding Service` to work properly:
+As a friendly reminder from the [AlwaysSaved Extractor Service](https://github.com/jaimemendozadev/alwayssaved-extractor-service), the following AWS Resource should have already been setup for this `Embedding Service` to work properly:
 
   - An Amazon <a href = "https://aws.amazon.com/sqs/" target="_blank">Simple Queue Service</a> `Embedding Queue` that the `Embedding Service` uses to get payloads sent from the `Extractor Service` to start the data embedding part of the ML/AI Pipeline (see [Steps 5-6 of System Design Diagram](#alwayssaved-system-design--app-flow)).
 
@@ -208,7 +208,7 @@ Using a trained embedding model to convert human language text into a list of `"
 
 When a user asks an LLM a question, that human language question goes through the same chunking and `"vector embedding"` flow so that a comparison can be made between the user's question and all the `"vector embedding"` data points in the Vector DB that are close to what the user is asking.
 
-It's those similar vector embedding points (along with the original language text chunk) that gets sent back to the user when it starts interacting with the LLM in the [LLM Service](https://github.com/jaimemendozadev/alwayssaved-llm-service) (see [Step 7 of the System Design Diagram](#alwayssaved-system-design--app-flow)).
+It's those similar vector embedding points (along with the original language text chunk) that gets sent back the LLM Service [LLM Service](https://github.com/jaimemendozadev/alwayssaved-llm-service) where the LLM can then generate an appropriate response to the User's question because all the relevant data was found (see [Step 7 of the System Design Diagram](#alwayssaved-system-design--app-flow)).
 
 <br />
 
