@@ -41,7 +41,7 @@ Your newly created Qdrant DB's URL and API Key will be saved in the AWS Parmeter
 
 ## Environment and AWS Systems Manager Parameter Store Variables
 
-In order to setup the app for local development, you'll need to create a `.env` file at the root of this repo and prefill all the required Environment Variables as show below:
+In order to setup the app for local development, you'll need to create a `.env` file at the root of this repo and prefill all the required Environment Variables as shown below:
 
 
 
