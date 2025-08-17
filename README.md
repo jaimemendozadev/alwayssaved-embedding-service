@@ -23,13 +23,13 @@ For more information about What is AlwaysSaved and its Key Features, refer to th
 
 ## 3rd Party Services Needed
 
-As a friendly reminder from the [AlwaysSaved Extractor Service](https://github.com/jaimemendozadev/alwayssaved-extractor-service), the following AWS Resource should have already been setup for this `Embedding Service` to work properly:
+As a friendly reminder from the [AlwaysSaved Extractor Service](https://github.com/jaimemendozadev/alwayssaved-extractor-service), the following AWS Resource should have already been setup for the `Embedding Service` to work properly:
 
   - An Amazon <a href = "https://aws.amazon.com/sqs/" target="_blank">Simple Queue Service</a> `Embedding Queue` that the `Embedding Service` uses to get payloads sent from the `Extractor Service` to start the data embedding part of the ML/AI Pipeline (see [Steps 5-6 of System Design Diagram](#alwayssaved-system-design--app-flow)).
 
 <br />
 
-If you haven't created it yet in the [AlwaysSaved Frontend](#https://github.com/jaimemendozadev/alwayssaved-fe-app), you'll need to set up a <a href="https://qdrant.tech/" target="_blank">Qdrant Vector Database (DB)</a>.
+If you haven't created it yet in the [AlwaysSaved Frontend](https://github.com/jaimemendozadev/alwayssaved-fe-app), you'll need to set up a <a href="https://qdrant.tech/" target="_blank">Qdrant Vector Database (DB)</a>.
 
 Your newly created Qdrant DB's URL and API Key will be saved in the AWS Parmeter Store ([see next section](#environment-and-aws-systems-manager-parameter-store-variables)).
 
