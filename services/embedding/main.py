@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
 from services.embedding.utils.main import (
     chunk_text,
+    delete_local_file,
     get_embedd_model,
     handle_msg_feedback,
 )
@@ -69,9 +70,11 @@ def embed_and_upload(
             )
 
         # transcript_key is media file name with .extension
-        _, file_extension = os.path.splitext(transcript_s3_key)
+        base_title, file_extension = os.path.splitext(transcript_s3_key)
 
-        file_extension = file_extension.lower()
+        file_extension = (
+            file_extension.lower()
+        )  # TODO: Do we really need to lowercase this?
 
         full_text = extract_text_from_s3_bytes(file_bytes, file_extension)
 
@@ -103,6 +106,10 @@ def embed_and_upload(
         qdrant_client.upsert(collection_name=QDRANT_COLLECTION_NAME, points=points)
 
         print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
+
+        transcript_abs_path = os.path.abspath(f"{base_title}{file_extension}")
+
+        delete_local_file(transcript_abs_path)
 
         return handle_msg_feedback(sqs_payload, "complete")
 

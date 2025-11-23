@@ -1,3 +1,4 @@
+import logging
 import os
 
 import torch
@@ -50,3 +51,15 @@ def chunk_text(text, chunk_size=1000, overlap=100):
         start += chunk_size - overlap
 
     return chunks
+
+
+def delete_local_file(file_path: str):
+    try:
+        if file_path and os.path.exists(file_path):
+            logging.info(f"🔎 Trying to delete: {file_path}")
+            os.remove(file_path)
+            print(f"🗑️ Deleted local file: {file_path}")
+        else:
+            print(f"⚠️ File not found or invalid: {file_path}")
+    except Exception as e:
+        print(f"❌ Failed to delete file {file_path}: {e}")
