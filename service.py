@@ -75,7 +75,7 @@ async def run_service():
 
     if mongo_client is None:
         print(
-            "❌ ❌ App fails final preliminary check where the MongoDB client could not be instantiated. Exiting."
+            "❌ App fails final preliminary check where the MongoDB client could not be instantiated. Exiting."
         )
         return
 
@@ -84,8 +84,6 @@ async def run_service():
         try:
 
             # 1) Get Extractor Queue Messages & Process.
-            print("Start Extracting and Processing Queue Messages.")
-            dequeue_start = time.time()
 
             # For MVP, will only dequee one SQS message at a time.
             sqs_payload = get_messages_from_extractor_service()
@@ -96,22 +94,16 @@ async def run_service():
                 time.sleep(2)
                 continue
 
-            dequeue_end = time.time()
-            dequeue_elapsed_time = dequeue_end - dequeue_start
-            print(
-                f"Elapsed time for Extracting and Processing Queue Messages: {dequeue_elapsed_time}"
-            )
-
             # 2) Embedd & Upload Every Message to Qdrant Database.
             print("Start Embedding and Uploading Messages to Qdrant Database.")
             embedd_start = time.time()
 
             # Need to stingify each dictionary to avoid executor Pickle issue.
-            jsonified_inputs = [json.dumps(msg) for msg in sqs_msg_list]
+            json_payloads = [json.dumps(msg) for msg in sqs_msg_list]
 
             # Ensures Fresh Worker Processes Each Batch
             with ProcessPoolExecutor() as executor:
-                raw_results = list(executor.map(executor_worker, jsonified_inputs))
+                raw_results = list(executor.map(executor_worker, json_payloads))
 
             embedd_end = time.time()
 
@@ -126,7 +118,7 @@ async def run_service():
 
             # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
             if len(successful_results) == 0:
-                # Transcription embedding failed -> Don't delete -> Let SQS redrive.
+                # Transcription embedding failed -> Don't delete -> Let SQS retry.
                 for failed_result in raw_results:
                     print(
                         f"❌ Transcript embedding failed for sqs_payload with message_id of {failed_result.get('message_id')} — skipping deletion."
