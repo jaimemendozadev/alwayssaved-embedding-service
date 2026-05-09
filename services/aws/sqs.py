@@ -19,7 +19,6 @@ VISIBILITY_TIMEOUT = 2700
 def get_messages_from_extractor_service() -> Dict[str, Any]:
 
     try:
-
         embedding_push_queue_url = get_secret("/alwayssaved/EMBEDDING_PUSH_QUEUE_URL")
 
         if not embedding_push_queue_url:

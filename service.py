@@ -80,9 +80,7 @@ async def run_service():
         return
 
     while True:
-
         try:
-
             # 1) Get Extractor Queue Messages & Process.
 
             # For MVP, will only dequee one SQS message at a time.
