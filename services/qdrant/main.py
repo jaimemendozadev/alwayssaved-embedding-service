@@ -38,7 +38,9 @@ def get_qdrant_client() -> QdrantClient | None:
                 "QDRANT_URL or QDRANT_API_KEY environment variables are not set."
             )
         # Connect to Qdrant
-        qdrant = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+        qdrant = QdrantClient(
+            url=qdrant_url, api_key=qdrant_api_key, cloud_inference=True
+        )
         return qdrant
 
     except ValueError as e:
