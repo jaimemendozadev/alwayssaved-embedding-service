@@ -68,6 +68,9 @@ def embed_and_upload(
             raise ValueError(
                 "❌ Error in embed_and_upload due to inability to fetch requested s3 file with given s3_key."
             )
+        
+        # TODO: Delete print statement after debugging complete
+        print(f"transcript_s3_key before os.path.splitext {transcript_s3_key}")
 
         # transcript_key is media file name with .extension
         base_title, file_extension = os.path.splitext(transcript_s3_key)

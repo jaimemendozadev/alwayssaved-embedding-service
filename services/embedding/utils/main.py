@@ -54,6 +54,9 @@ def chunk_text(text, chunk_size=1000, overlap=100):
 
 
 def delete_local_file(file_path: str):
+
+    # TODO: Delete print statement after debugging complete
+    print(f"About to delete file_path {file_path}")
     try:
         if file_path and os.path.exists(file_path):
             logging.info(f"🔎 Trying to delete: {file_path}")
