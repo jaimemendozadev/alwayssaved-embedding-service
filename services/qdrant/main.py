@@ -1,6 +1,7 @@
 import os
 
 from qdrant_client import QdrantClient
+from qdrant_client.http import models as rest
 from qdrant_client.conversions.common_types import CollectionInfo
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import Distance, VectorParams
@@ -8,6 +9,25 @@ from qdrant_client.http.models import Distance, VectorParams
 from services.aws.ssm import get_secret
 
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "alwayssaved_user_files")
+
+
+def ensure_payload_indexes(q_client: QdrantClient) -> None:
+    """
+    Creates keyword payload indexes for filter fields if they don't already exist.
+    Safe to call on every startup — Qdrant is idempotent about existing indexes.
+    """
+    fields_to_index = ["user_id", "note_id", "file_id"]
+
+    for field in fields_to_index:
+        try:
+            q_client.create_payload_index(
+                collection_name=QDRANT_COLLECTION_NAME,
+                field_name=field,
+                field_schema=rest.PayloadSchemaType.KEYWORD,
+            )
+            print(f"✅ Payload index ensured for field: {field}")
+        except Exception as e:
+            print(f"⚠️ Could not create payload index for '{field}': {e}")
 
 
 def create_qdrant_collection(q_client: QdrantClient) -> None:
@@ -41,6 +61,9 @@ def get_qdrant_client() -> QdrantClient | None:
         qdrant = QdrantClient(
             url=qdrant_url, api_key=qdrant_api_key, cloud_inference=True
         )
+
+        ensure_payload_indexes(qdrant)
+
         return qdrant
 
     except ValueError as e:
