@@ -131,7 +131,7 @@ Once all the dependencies are installed and `pre-commit` hooks are registered (s
 $ uv run python service.py
 ```
 
-This starts the Extractor Service and keeps it running.
+This starts the Embedding Service and keeps it running.
 
 **Terminal Window 2 — Development and Git commits:**
 
