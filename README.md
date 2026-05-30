@@ -12,6 +12,8 @@ For more information about What is AlwaysSaved and its Key Features, refer to th
 
 - [3rd Party Services Needed](#3rd-party-services-needed)
 - [Environment and AWS Systems Manager Parameter Store Variables](#environment-and-aws-systems-manager-parameter-store-variables)
+- [Installing the App Dependencies](#installing-the-app-dependencies)
+- [Starting the App](#starting-the-app)
 - [File Structure and Text Vectorizing Flow](#file-structure-and-text-vectorizing-flow)
 - [AlwaysSaved System Design / App Flow](#alwayssaved-system-design--app-flow)
 
@@ -82,6 +84,72 @@ If you already setup your MongoDB Cluster and s3 Bucket by setting up the [Alway
 Make sure that the `Embedding Queue` URL gets saved under `/alwayssaved/EMBEDDING_PUSH_QUEUE_URL`.
 
 Last but not least, make sure that you save the Qdrant DB URL and API Key in the Parameter Store with the `/alwayssaved/QDRANT_URL` and `/alwayssaved/QDRANT_API_KEY` key names respectively.
+
+<br />
+
+[Back to TOC](#table-of-contents-toc)
+
+---
+
+## Installing the App Dependencies
+
+You'll need the <a href="https://docs.astral.sh/uv/" target="_blank">uv Python package/project manager</a> to start the app.
+
+- If `uv` is not installed on your computer, <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank">reference the documentation</a> for installation instructions.
+
+The project also leverages the <a href="https://docs.astral.sh/ruff/" target="_blank">ruff Python linter/code formatter</a>.
+
+- If `ruff` is not installed on your computer, <a href="https://docs.astral.sh/ruff/installation/" target="_blank">reference the documentation</a> for installation instructions.
+
+Once `uv` and `ruff` are installed, run the following command at the root of the repo to create the virtual environment and install all project and dev dependencies (including `pre-commit`):
+
+```
+$ uv sync
+```
+
+After `uv sync` completes, run the following command once to register the `pre-commit` git hooks:
+
+```
+$ pre-commit install
+```
+
+This wires up the `ruff` linter/formatter to run automatically whenever you commit changes.
+
+<br />
+
+[Back to TOC](#table-of-contents-toc)
+
+---
+
+## Starting the App
+
+Once all the dependencies are installed and `pre-commit` hooks are registered (see [Installing the App Dependencies](#installing-the-app-dependencies)), open two separate terminal windows at the root of the repo.
+
+**Terminal Window 1 — Run the service:**
+
+```
+$ uv run python service.py
+```
+
+This starts the Extractor Service and keeps it running.
+
+**Terminal Window 2 — Development and Git commits:**
+
+Enter the virtual environment that was created by `uv sync`:
+
+```
+$ source .venv/bin/activate
+```
+
+Use this terminal window during development to stage and commit your changes with Git. Because the `pre-commit` hooks are registered, any `git commit` will automatically run `ruff` to lint and format your code before the commit is saved.
+
+If `ruff` finds errors, the commit will be blocked. Fix the reported issues, re-stage the files, and commit again. Once `ruff` passes, the commit will be saved and you can push the changes to GitHub.
+
+To exit the virtual environment when you're done, run:
+
+```
+$ deactivate
+```
 
 <br />
 
