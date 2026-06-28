@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 sender = os.getenv("AWS_SES_SENDER_EMAIL", "").strip()
 SUBJECT = "Your media file has been processed! 🥳"
-BODY_TEXT = "We've finished processing your media file and you're now ready to ask it questions against the LLM. Happy querying! 🎉🙌🏽"
+BODY_TEXT = "We've finished processing your media files. You may now ask the LLM questions about your files. Happy querying! 🎉🙌🏽"
 
 
 async def send_user_email_notification(
