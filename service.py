@@ -6,7 +6,7 @@ import traceback
 from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING
 
-import boto3
+import aioboto3
 from dotenv import load_dotenv
 
 from services.aws.ses import send_user_email_notification
@@ -34,9 +34,15 @@ qdrant_client = get_qdrant_client()
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 if TYPE_CHECKING:
-    from mypy_boto3_ses import SESClient
+    from types_aiobotocore_ses.client import SESClient
 
-ses_client: "SESClient" = boto3.client("ses", region_name=AWS_REGION)
+# aioboto3 clients are async context managers, not plain objects you can
+# instantiate once at module level the way sync boto3.client() worked.
+# The Session itself is cheap/stateless and safe to keep as a module-level
+# global — it's only the actual client (opened via `session.client(...)`)
+# that needs to live inside an `async with` block. See run_service() below,
+# where it's opened once and held open for the lifetime of the service loop.
+aws_session = aioboto3.Session()
 
 mongo_client = create_mongodb_instance()
 
@@ -46,7 +52,7 @@ def executor_worker(json_payload: str):
     return embed_and_upload(payload_dict)
 
 
-async def process_successful_results(successful_results):
+async def process_successful_results(ses_client: "SESClient", successful_results):
     tasks = [
         send_user_email_notification(ses_client, mongo_client, result["user_id"])
         for result in successful_results
@@ -79,61 +85,68 @@ async def run_service():
         )
         return
 
-    while True:
-        try:
-            # 1) Get Extractor Queue Messages & Process.
+    # Opened ONCE here, held open for the entire lifetime of the service
+    # loop below — NOT re-opened per-message. Re-opening per-message would
+    # work but adds unnecessary connection setup/teardown on every single
+    # iteration for no benefit, since this loop runs effectively forever.
+    async with aws_session.client("ses", region_name=AWS_REGION) as ses_client:
+        while True:
+            try:
+                # 1) Get Extractor Queue Messages & Process.
 
-            # For MVP, will only dequee one SQS message at a time.
-            sqs_payload = get_messages_from_extractor_service()
+                # For MVP, will only dequee one SQS message at a time.
+                sqs_payload = get_messages_from_extractor_service()
 
-            sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
+                sqs_msg_list = process_incoming_sqs_messages(sqs_payload)
 
-            if len(sqs_msg_list) == 0:
-                time.sleep(2)
-                continue
+                if len(sqs_msg_list) == 0:
+                    time.sleep(2)
+                    continue
 
-            # 2) Embedd & Upload Every Message to Qdrant Database.
-            print("Start Embedding and Uploading Messages to Qdrant Database.")
-            embedd_start = time.time()
+                # 2) Embed & Upload Every Message to Qdrant Database.
+                print("Start Embedding and Uploading Messages to Qdrant Database.")
+                embedd_start = time.time()
 
-            # Need to stingify each dictionary to avoid executor Pickle issue.
-            json_payloads = [json.dumps(msg) for msg in sqs_msg_list]
+                # Need to stingify each dictionary to avoid executor Pickle issue.
+                json_payloads = [json.dumps(msg) for msg in sqs_msg_list]
 
-            # Ensures Fresh Worker Processes Each Batch
-            with ProcessPoolExecutor() as executor:
-                raw_results = list(executor.map(executor_worker, json_payloads))
+                # Ensures Fresh Worker Processes Each Batch
+                with ProcessPoolExecutor() as executor:
+                    raw_results = list(executor.map(executor_worker, json_payloads))
 
-            embedd_end = time.time()
+                embedd_end = time.time()
 
-            embedd_elapsed_time = embedd_end - embedd_start
-            print(
-                f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time}"
-            )
-
-            successful_results = [
-                res for res in raw_results if res.get("process_status") == "complete"
-            ]
-
-            # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
-            if len(successful_results) == 0:
-                # Transcription embedding failed -> Don't delete -> Let SQS retry.
-                for failed_result in raw_results:
-                    print(
-                        f"❌ Transcript embedding failed for sqs_payload with message_id of {failed_result.get('message_id')} — skipping deletion."
-                    )
-
-            else:
+                embedd_elapsed_time = embedd_end - embedd_start
                 print(
-                    "Start deleting successfully process messages from Embedding Push Queue."
+                    f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time}"
                 )
-                delete_embedding_sqs_message(successful_results)
 
-                # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
-                # await process_successful_results(successful_results)
+                successful_results = [
+                    res
+                    for res in raw_results
+                    if res.get("process_status") == "complete"
+                ]
 
-        except ValueError as e:
-            print(f"ValueError in run_service function: {e}")
-            traceback.print_exc()
+                # 3) Delete Successfully Embedded/Uploaded Messages From SQS.
+                if len(successful_results) == 0:
+                    # Transcription embedding failed -> Don't delete -> Let SQS retry.
+                    for failed_result in raw_results:
+                        print(
+                            f"❌ Transcript embedding failed for sqs_payload with message_id of {failed_result.get('message_id')} — skipping deletion."
+                        )
+
+                else:
+                    print(
+                        "Start deleting successfully process messages from Embedding Push Queue."
+                    )
+                    delete_embedding_sqs_message(successful_results)
+
+                    # 4) Fire an SES Email For Each Successful Embedd/Upload Message.
+                    await process_successful_results(ses_client, successful_results)
+
+            except ValueError as e:
+                print(f"ValueError in run_service function: {e}")
+                traceback.print_exc()
 
 
 if __name__ == "__main__":

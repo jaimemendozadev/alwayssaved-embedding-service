@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from pymongo import AsyncMongoClient
 
 if TYPE_CHECKING:
-    from mypy_boto3_ses import SESClient
+    from types_aiobotocore_ses.client import SESClient
 
 sender = os.getenv("AWS_SES_SENDER_EMAIL", "").strip()
 SUBJECT = "Your media file has been processed! 🥳"
@@ -41,6 +41,9 @@ async def send_user_email_notification(
                 f"User with id of {user_id} has no email. Can't send a transcription notification email."
             )
 
+        # aioboto3's ses_client is a genuine async client (unlike plain
+        # boto3), so send_email here actually returns a coroutine and
+        # this await is doing real work, not a no-op.
         response = await ses_client.send_email(
             Source=sender,
             Destination={
