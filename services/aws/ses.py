@@ -8,7 +8,7 @@ from pymongo import AsyncMongoClient
 if TYPE_CHECKING:
     from types_aiobotocore_ses.client import SESClient
 
-sender = os.getenv("AWS_SES_SENDER_EMAIL", "").strip()
+sender = os.getenv("AWS_SES_SENDER_EMAIL", "no-reply@alwayssaved.com").strip()
 SUBJECT = "Your media file has been processed! 🥳"
 BODY_TEXT = "We've finished processing your media files. You may now ask the LLM questions about your files. Happy querying! 🎉🙌🏽"
 
