@@ -11,4 +11,4 @@ def get_secret(param_name: str) -> str:
     """Fetches secret from AWS Parameter Store."""
 
     response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
-    return response["Parameter"]["Value"]
+    return response["Parameter"]["Value"].strip()
