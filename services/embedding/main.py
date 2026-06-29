@@ -68,9 +68,6 @@ def embed_and_upload(
                 "❌ Error in embed_and_upload due to inability to fetch requested s3 file with given s3_key."
             )
 
-        # TODO: Delete print statement after debugging complete
-        print(f"About to chunk s3 transcript for file: {transcript_s3_key}")
-
         # transcript_key is media file name with .extension
         _, file_extension = os.path.splitext(transcript_s3_key)
 
@@ -107,7 +104,9 @@ def embed_and_upload(
             )
         qdrant_client.upsert(collection_name=QDRANT_COLLECTION_NAME, points=points)
 
-        print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
+        print(
+            f"✅ Uploaded {len(points)} chunks to Qdrant for user_id {user_id} file: {transcript_s3_key}"
+        )
 
         return handle_msg_feedback(sqs_payload, "complete")
 
