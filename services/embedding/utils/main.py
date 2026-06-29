@@ -1,4 +1,3 @@
-import logging
 import os
 
 import torch
@@ -31,7 +30,7 @@ def handle_msg_feedback(
 def get_embedd_model() -> SentenceTransformer:
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    print(f"✅ Using device for embedd model: {device}")
+    print(f"✅ Using device for embed model: {device}")
 
     model_name = os.getenv("EMBEDDING_MODEL", "multi-qa-MiniLM-L6-cos-v1")
 
@@ -51,18 +50,3 @@ def chunk_text(text, chunk_size=1000, overlap=100):
         start += chunk_size - overlap
 
     return chunks
-
-
-def delete_local_file(file_path: str):
-
-    # TODO: Delete print statement after debugging complete
-    print(f"About to delete file_path {file_path}")
-    try:
-        if file_path and os.path.exists(file_path):
-            logging.info(f"🔎 Trying to delete: {file_path}")
-            os.remove(file_path)
-            print(f"🗑️ Deleted local file: {file_path}")
-        else:
-            print(f"⚠️ File not found or invalid: {file_path}")
-    except Exception as e:
-        print(f"❌ Failed to delete file {file_path}: {e}")

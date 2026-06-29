@@ -9,7 +9,6 @@ from sentence_transformers import SentenceTransformer
 from services.aws.s3 import download_file_from_s3, extract_text_from_s3_bytes
 from services.embedding.utils.main import (
     chunk_text,
-    delete_local_file,
     get_embedd_model,
     handle_msg_feedback,
 )
@@ -68,12 +67,12 @@ def embed_and_upload(
             raise ValueError(
                 "❌ Error in embed_and_upload due to inability to fetch requested s3 file with given s3_key."
             )
-        
+
         # TODO: Delete print statement after debugging complete
-        print(f"transcript_s3_key before os.path.splitext {transcript_s3_key}")
+        print(f"About to chunk s3 transcript for file: {transcript_s3_key}")
 
         # transcript_key is media file name with .extension
-        base_title, file_extension = os.path.splitext(transcript_s3_key)
+        _, file_extension = os.path.splitext(transcript_s3_key)
 
         file_extension = (
             file_extension.lower()
@@ -109,10 +108,6 @@ def embed_and_upload(
         qdrant_client.upsert(collection_name=QDRANT_COLLECTION_NAME, points=points)
 
         print(f"✅ Uploaded {len(points)} chunks to Qdrant!")
-
-        transcript_abs_path = os.path.abspath(f"{base_title}{file_extension}")
-
-        delete_local_file(transcript_abs_path)
 
         return handle_msg_feedback(sqs_payload, "complete")
 
