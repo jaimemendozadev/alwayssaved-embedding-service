@@ -104,8 +104,6 @@ async def run_service():
                     continue
 
                 # 2) Embed & Upload Every Message to Qdrant Database.
-                print("Start Embedding and Uploading Messages to Qdrant Database.")
-                embedd_start = time.time()
 
                 # Need to stingify each dictionary to avoid executor Pickle issue.
                 json_payloads = [json.dumps(msg) for msg in sqs_msg_list]
@@ -113,13 +111,6 @@ async def run_service():
                 # Ensures Fresh Worker Processes Each Batch
                 with ProcessPoolExecutor() as executor:
                     raw_results = list(executor.map(executor_worker, json_payloads))
-
-                embedd_end = time.time()
-
-                embedd_elapsed_time = embedd_end - embedd_start
-                print(
-                    f"Elapsed time for Embedding and Uploading Messages to Qdrant Database: {embedd_elapsed_time}"
-                )
 
                 successful_results = [
                     res

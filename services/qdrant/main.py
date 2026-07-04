@@ -25,7 +25,6 @@ def ensure_payload_indexes(q_client: QdrantClient) -> None:
                 field_name=field,
                 field_schema=rest.PayloadSchemaType.KEYWORD,
             )
-            print(f"✅ Payload index ensured for field: {field}")
         except Exception as e:
             print(f"⚠️ Could not create payload index for '{field}': {e}")
 

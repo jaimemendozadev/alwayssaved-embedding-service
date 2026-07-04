@@ -17,15 +17,12 @@ async def send_user_email_notification(
     ses_client: "SESClient", mongo_client: AsyncMongoClient, user_id: str
 ) -> None:
 
-    print(f"user_id in send_user_email_notification: {user_id}")
-
     try:
         found_user = (
             await mongo_client.get_database("alwayssaved")
             .get_collection("users")
             .find_one({"_id": ObjectId(user_id)})
         )
-        print(f"found_user in send_user_email_notification: {found_user}")
 
         if found_user is None:
             raise ValueError(
@@ -44,7 +41,7 @@ async def send_user_email_notification(
         # aioboto3's ses_client is a genuine async client (unlike plain
         # boto3), so send_email here actually returns a coroutine and
         # this await is doing real work, not a no-op.
-        response = await ses_client.send_email(
+        await ses_client.send_email(
             Source=sender,
             Destination={
                 "ToAddresses": [email],
@@ -60,8 +57,6 @@ async def send_user_email_notification(
                 },
             },
         )
-        print(f"response in send_user_email_notification: {response}")
-        print(f"Email sent to {email}! Message ID:", response["MessageId"])
 
     except (ParamValidationError, BotoCoreError) as e:
         print(f"❌ SES error ({type(e).__name__}): {str(e)} — user_id: {user_id}")
