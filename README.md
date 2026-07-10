@@ -43,8 +43,6 @@ In order to setup the app for local development, you'll need to create a `.env` 
 AWS_REGION=us-east-1
 AWS_BUCKET=alwayssaved
 
-PYTHON_MODE=development
-
 EMBEDDING_MODEL=multi-qa-MiniLM-L6-cos-v1
 
 QDRANT_COLLECTION_NAME=alwayssaved_user_files

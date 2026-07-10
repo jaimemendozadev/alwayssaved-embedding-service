@@ -25,10 +25,6 @@ from services.utils.mongodb.main import create_mongodb_instance
 
 load_dotenv()
 
-# IMPORTANT: REMEMBER TO SET PYTHON_MODE in .env to 'production' when creating Docker image
-PYTHON_MODE = os.getenv("PYTHON_MODE", "production")
-
-
 qdrant_client = get_qdrant_client()
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
