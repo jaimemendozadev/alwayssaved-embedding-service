@@ -2,6 +2,7 @@ from typing import Literal, TypedDict
 
 
 class SQSPayload(TypedDict):
+    original_filename: str
     message_id: str
     note_id: str
     user_id: str

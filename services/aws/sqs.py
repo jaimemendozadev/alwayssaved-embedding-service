@@ -71,6 +71,7 @@ def process_incoming_sqs_messages(
             "sqs_receipt_handle": msg.get("ReceiptHandle", ""),
         }
 
+        processed_msg["original_filename"] = payload_body.get("original_filename", "")
         processed_msg["file_id"] = payload_body.get("file_id", "")
         processed_msg["note_id"] = payload_body.get("note_id", "")
         processed_msg["user_id"] = payload_body.get("user_id", "")

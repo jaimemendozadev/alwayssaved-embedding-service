@@ -202,6 +202,7 @@ At the start of the `Embedding Service` in the `service.py` file, we dequeue tha
 
 ```
   {
+      original_filename: string;
       note_id: string;
       file_id: string;
       user_id: string;

@@ -15,6 +15,7 @@ def handle_msg_feedback(
     user_id = sqs_payload.get("user_id", "")
     transcript_s3_key = sqs_payload.get("transcript_s3_key", "")
     sqs_receipt_handle = sqs_payload.get("sqs_receipt_handle", "")
+    original_filename = sqs_payload.get("original_filename", "")
 
     return {
         "file_id": file_id,
@@ -24,6 +25,7 @@ def handle_msg_feedback(
         "transcript_s3_key": transcript_s3_key,
         "sqs_receipt_handle": sqs_receipt_handle,
         "process_status": process_result,
+        "original_filename": original_filename,
     }
 
 

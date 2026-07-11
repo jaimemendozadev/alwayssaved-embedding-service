@@ -48,6 +48,7 @@ def executor_worker(json_payload: str):
     return embed_and_upload(payload_dict)
 
 
+# TODO: Pass entire payload to send_user_email_notification
 async def process_successful_results(ses_client: "SESClient", successful_results):
     tasks = [
         send_user_email_notification(ses_client, mongo_client, result["user_id"])
