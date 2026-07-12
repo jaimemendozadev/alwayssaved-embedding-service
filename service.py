@@ -22,6 +22,7 @@ from services.qdrant.main import (
     get_qdrant_collection,
 )
 from services.utils.mongodb.main import create_mongodb_instance
+from services.utils.types.main import EmbedStatus
 
 load_dotenv()
 
@@ -43,15 +44,17 @@ aws_session = aioboto3.Session()
 mongo_client = create_mongodb_instance()
 
 
-def executor_worker(json_payload: str):
+def executor_worker(json_payload: str) -> EmbedStatus:
     payload_dict = json.loads(json_payload)
     return embed_and_upload(payload_dict)
 
 
 # TODO: Pass entire payload to send_user_email_notification
-async def process_successful_results(ses_client: "SESClient", successful_results):
+async def process_successful_results(
+    ses_client: "SESClient", successful_results: list[EmbedStatus]
+):
     tasks = [
-        send_user_email_notification(ses_client, mongo_client, result["user_id"])
+        send_user_email_notification(ses_client, mongo_client, result)
         for result in successful_results
     ]
     await asyncio.gather(*tasks)
