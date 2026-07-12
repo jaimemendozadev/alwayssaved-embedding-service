@@ -10,8 +10,11 @@ if TYPE_CHECKING:
     from types_aiobotocore_ses.client import SESClient
 
 sender = os.getenv("AWS_SES_SENDER_EMAIL", "no-reply@alwayssaved.com").strip()
+
+# 7-12-26 TODO: Will have to fix how email body is created if embedding service process more than 1 media file.
+
 SUBJECT = "Your media file has been processed! 🥳"
-INTRO_TEXT = "We've finished processing your media files. \n"
+INTRO_TEXT = "We've finished processing your media files.\n\n"
 ENDING_TEXT = (
     "You may now ask the LLM questions about your files. Happy querying! 🎉🙌🏽"
 )
