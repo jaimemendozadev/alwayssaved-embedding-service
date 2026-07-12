@@ -46,7 +46,7 @@ async def send_user_email_notification(
                 f"User with id of {user_id} has no email. Can't send a transcription notification email."
             )
 
-        BODY_TEXT = f"- {original_filename}"
+        BODY_TEXT = f" - {original_filename} \n\n"
 
         FINALIZED_BODY = "".join([INTRO_TEXT, BODY_TEXT, ENDING_TEXT])
 
